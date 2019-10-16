@@ -1,4 +1,3 @@
-
 import 'mocha'
 
 import * as protobuf from 'protobufjs'
@@ -6,15 +5,15 @@ import * as assert from 'assert'
 
 import * as path from 'path'
 import * as crypto from 'crypto'
-import {Server, Client} from './../src'
+import { Server, Client } from '../src'
 import * as wsrpc_client from '../src/Client'
-import {waitForEvent} from './../src/utils'
-import {TestService, TextMessage} from './../protocol/test'
-import * as rpcproto from './../protocol/rpc'
+import { waitForEvent } from '../src/utils'
+import { TestService, TextMessage } from '../protocol/test'
+import * as rpcproto from '../protocol/rpc'
 import * as WebSocket from 'ws'
 
 const testPort = 1234
-const testAddr = `ws://localhost:${ testPort }`
+const testAddr = `ws://localhost:${testPort}`
 const testProtoPath = path.join(__dirname, './../protocol/test.proto')
 const testProto = protobuf.loadSync(testProtoPath)
 
@@ -69,28 +68,32 @@ describe('rpc', () => {
     })
     after(async () => await client.disconnect())
 
-    it('should throw when implementing invalid method', function() {
+    it('should throw when implementing invalid method', function () {
         assert.throws(() => {
-            server.implement('TestService', 'kek', async () => { return {}})
+            server.implement('TestService', 'kek', async () => {
+                return {}
+            })
         })
         assert.throws(() => {
             const orphanMethod = new protobuf.Method('Keke', 'foo', 'bar', 'baz')
-            server.implement('TestService', orphanMethod, async () => { return {}})
+            server.implement('TestService', orphanMethod, async () => {
+                return {}
+            })
         })
     })
 
-    it('should run echo rpc method', async function() {
+    it('should run echo rpc method', async function () {
         const response = await client.service.echo({text: 'hello world'})
         assert.equal(response.text, 'hello world')
     })
 
-    it('should run upper rpc method', async function() {
+    it('should run upper rpc method', async function () {
         this.slow(150)
         const response = await client.service.upper({text: 'hello world'})
         assert.equal(response.text, 'HELLO WORLD')
     })
 
-    it('should handle thrown errors in implementation handler', async function() {
+    it('should handle thrown errors in implementation handler', async function () {
         planError = true
         try {
             await client.service.echo({text: 'throw'})
@@ -101,7 +104,7 @@ describe('rpc', () => {
         }
     })
 
-    it('should handle thrown strings in implementation handler', async function() {
+    it('should handle thrown strings in implementation handler', async function () {
         try {
             await client.service.echo({text: 'throw-string'})
             assert(false, 'should not be reached')
@@ -111,7 +114,7 @@ describe('rpc', () => {
         }
     })
 
-    it('should handle unimplemented methods', async function() {
+    it('should handle unimplemented methods', async function () {
         try {
             await client.service.notImplemented({})
             assert(false, 'should throw')
@@ -121,7 +124,7 @@ describe('rpc', () => {
         }
     })
 
-    it('should handle bogus request message', function(done) {
+    it('should handle bogus request message', function (done) {
         const c = client as any
         const msg = rpcproto.Message.encode({
             type: rpcproto.Message.Type.REQUEST,
@@ -129,7 +132,7 @@ describe('rpc', () => {
                 seq: 0,
                 method: crypto.pseudoRandomBytes(1e4).toString('utf8'),
                 service: 'TestService',
-            }
+            },
         }).finish()
         c.socket.send(msg)
         server.once('error', (error: any) => {
@@ -138,7 +141,7 @@ describe('rpc', () => {
         })
     })
 
-    it('should handle bogus message', function(done) {
+    it('should handle bogus message', function (done) {
         const c = client as any
         const msg = rpcproto.Message.encode({
             type: rpcproto.Message.Type.EVENT,
@@ -156,7 +159,7 @@ describe('rpc', () => {
     })
 
 
-    it('should handle garbled data from client', function(done) {
+    it('should handle garbled data from client', function (done) {
         planError = true
         const c = client as any
         c.socket.send(crypto.pseudoRandomBytes(512))
@@ -167,7 +170,7 @@ describe('rpc', () => {
         })
     })
 
-    it('should handle garbled data from server', function(done) {
+    it('should handle garbled data from server', function (done) {
         assert.equal(server.connections.length, 1)
         let conn = server.connections[0] as any
         conn.socket.send(crypto.pseudoRandomBytes(1024))
@@ -178,7 +181,7 @@ describe('rpc', () => {
         })
     })
 
-    it('should emit event', function(done) {
+    it('should emit event', function (done) {
         planError = false
         assert.equal(server.connections.length, 1)
         const data = crypto.pseudoRandomBytes(42)
@@ -190,7 +193,7 @@ describe('rpc', () => {
         })
     })
 
-    it('should emit typed event', function(done) {
+    it('should emit typed event', function (done) {
         const text = 'I like les turlos'
         server.broadcast('text', TextMessage.encode({text}).finish())
         client.once('event', (name: string, payload: TextMessage) => {
@@ -200,7 +203,7 @@ describe('rpc', () => {
         })
     })
 
-    it('should handle garbled event data', function(done) {
+    it('should handle garbled event data', function (done) {
         planError = true
         server.broadcast('text', crypto.pseudoRandomBytes(42))
         client.once('error', (error: any) => {
@@ -210,7 +213,7 @@ describe('rpc', () => {
         })
     })
 
-    it('should timeout messages', async function() {
+    it('should timeout messages', async function () {
         planError = false
         this.slow(300)
         const response = client.service.echo({text: 'foo'})
@@ -223,13 +226,13 @@ describe('rpc', () => {
         }
     })
 
-    it('should reconnect', async function() {
+    it('should reconnect', async function () {
         await client.connect()
         const response = await client.service.echo({text: 'baz'})
         assert(response.text, 'baz')
     })
 
-    it('should handle server disconnection', async function() {
+    it('should handle server disconnection', async function () {
         this.slow(300)
         const c = client as any
         c.sendTimeout = 1000
@@ -244,7 +247,7 @@ describe('rpc', () => {
         assert.deepEqual(response.map((msg) => msg.text), ['fizz', 'buzz'])
     })
 
-    it('should retry', async function() {
+    it('should retry', async function () {
         this.slow(300)
         server.close()
         await waitForEvent(client, 'close')
@@ -256,8 +259,10 @@ describe('rpc', () => {
         await waitForEvent(client, 'open')
     })
 
-    it('should handle failed writes', async function() {
-        (<any> client).socket.send = () => { throw new Error('boom') }
+    it('should handle failed writes', async function () {
+        (<any>client).socket.send = () => {
+            throw new Error('boom')
+        }
         try {
             await client.service.echo({text: 'boom'})
             assert(false, 'should not be reached')
@@ -266,20 +271,20 @@ describe('rpc', () => {
         }
     })
 
-    it('should close server', async function() {
+    it('should close server', async function () {
         server.close()
         await waitForEvent(client, 'close')
     })
 
 })
 
-describe('rpc browser client', function() {
+describe('rpc browser client', function () {
     // simulated browser test using the ws module
 
     let server: Server
     let client: Client<TestService>
 
-    before(async function() {
+    before(async function () {
         (<any>wsrpc_client).WS = WebSocket
         process.title = 'browser'
         server = new Server([serverService], serverOpts)
@@ -289,12 +294,12 @@ describe('rpc browser client', function() {
         client = new Client(testAddr, TestService)
     })
 
-    after(async function() {
+    after(async function () {
         await client.disconnect()
         server.close()
     })
 
-    it('should work', async function() {
+    it('should work', async function () {
         const response = await client.service.echo({text: 'foo'})
         assert.equal(response.text, 'foo')
     })
