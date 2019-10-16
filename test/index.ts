@@ -28,9 +28,9 @@ describe('rpc', () => {
 
     let planError = false
 
-    let server = new Server(serverService, serverOpts)
+    let server = new Server([serverService], serverOpts)
 
-    server.implement('echo', async (request: TextMessage) => {
+    server.implement('TestService', 'echo', async (request: TextMessage) => {
         if (request.text === 'throw-string') {
             throw 'You should always trow an error object'
         }
@@ -40,7 +40,7 @@ describe('rpc', () => {
         return {text: request.text}
     })
 
-    server.implement(serverService.methods['Upper'], (request: TextMessage) => {
+    server.implement('TestService', serverService.methods['Upper'], (request: TextMessage) => {
         return new Promise((resolve, reject) => {
             const text = request.text.toUpperCase()
             setTimeout(() => {
@@ -71,11 +71,11 @@ describe('rpc', () => {
 
     it('should throw when implementing invalid method', function() {
         assert.throws(() => {
-            server.implement('kek', async () => { return {}})
+            server.implement('TestService', 'kek', async () => { return {}})
         })
         assert.throws(() => {
             const orphanMethod = new protobuf.Method('Keke', 'foo', 'bar', 'baz')
-            server.implement(orphanMethod, async () => { return {}})
+            server.implement('TestService', orphanMethod, async () => { return {}})
         })
     })
 
@@ -128,6 +128,7 @@ describe('rpc', () => {
             request: {
                 seq: 0,
                 method: crypto.pseudoRandomBytes(1e4).toString('utf8'),
+                service: 'TestService',
             }
         }).finish()
         c.socket.send(msg)
@@ -251,7 +252,7 @@ describe('rpc', () => {
         // force a connection failure to simulate server being down for a bit
         await client.connect()
         planError = false
-        server = new Server(serverService, serverOpts)
+        server = new Server([serverService], serverOpts)
         await waitForEvent(client, 'open')
     })
 
@@ -281,8 +282,8 @@ describe('rpc browser client', function() {
     before(async function() {
         (<any>wsrpc_client).WS = WebSocket
         process.title = 'browser'
-        server = new Server(serverService, serverOpts)
-        server.implement('echo', async (request: TextMessage) => {
+        server = new Server([serverService], serverOpts)
+        server.implement('TestService', 'echo', async (request: TextMessage) => {
             return {text: request.text}
         })
         client = new Client(testAddr, TestService)
