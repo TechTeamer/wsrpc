@@ -80,6 +80,7 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
      * @param address The address to the {@link Server}, eg `ws://example.com:8042`.
      * @param service The protocol buffer service class to use, an instance of this
      *                will be available as {@link Client.service}.
+     * @param options Client options {@see IClientOptions}
      */
     constructor(address: string, service: {create(rpcImpl: protobuf.RPCImpl): T}, options: IClientOptions = {}) {
         super()
@@ -93,7 +94,7 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
         this.writeMessage = process.title === 'browser' ? this.writeMessageBrowser : this.writeMessageNode
         this.sendTimeout = options.sendTimeout || 5 * 1000
 
-        if (options.autoConnect === undefined || options.autoConnect === true) {
+        if (options.autoConnect === undefined || options.autoConnect) {
             this.connect()
         }
     }
@@ -191,10 +192,10 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
 
         const message: RPC.IMessage = {
             request: {
-                // service: ???,
                 method: method.name,
                 payload: requestData,
                 seq,
+                service: 'TestService',
             },
             type: RPC.Message.Type.REQUEST,
         }

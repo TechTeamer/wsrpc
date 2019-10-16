@@ -68,9 +68,14 @@ export class Connection extends EventEmitter {
     }
 
     private async requestHandler(request: RPC.Request): Promise<RPC.Response> {
+        const serviceName = request.service[0].toUpperCase() + request.service.substring(1)
         const methodName = request.method[0].toUpperCase() + request.method.substring(1)
 
-        const method = this.server.service.methods[methodName]
+        const service = this.server.services[serviceName]
+        if (!service) {
+            throw new Error('Invalid service')
+        }
+        const method = service.methods[methodName]
         if (!method) {
             throw new Error('Invalid method')
         }

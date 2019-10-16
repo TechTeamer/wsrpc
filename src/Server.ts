@@ -45,7 +45,6 @@ import { Handler } from './type/Handler'
 
 import { Connection } from './Connection'
 
-
 /**
  * RPC Server
  * ----------
@@ -68,9 +67,9 @@ export class Server extends EventEmitter implements IServerEvents {
     public readonly options: IServerOptions
 
     /**
-     * The protobuf Service instance, internal.
+     * Protobuf service instances, internal.
      */
-    public readonly service: protobuf.Service
+    public readonly services: {[name: string]: protobuf.Service} = {}
 
     /**
      * The underlying uWebSocket server, internal.
@@ -81,13 +80,16 @@ export class Server extends EventEmitter implements IServerEvents {
     private pingInterval: number
 
     /**
-     * @param service The protocol buffer service class to serve.
+     * @param services The protocol buffer service class to serve.
      * @param options Options, see {@link IServerOptions}.
      */
-    constructor(service: protobuf.Service, options: IServerOptions = {}) {
+    constructor(services: protobuf.Service[], options: IServerOptions = {}) {
         super()
 
-        this.service = service
+        services.forEach((service) => {
+            this.services[service.name] = service
+        })
+
         this.options = options
 
         options.clientTracking = false
@@ -113,16 +115,23 @@ export class Server extends EventEmitter implements IServerEvents {
     /**
      * Implement a RPC method defined in the protobuf service.
      */
-    public implement(method: protobuf.Method | string, handler: Handler) {
+    public implement(serviceName: string, method: protobuf.Method | string, handler: Handler) {
+        serviceName = serviceName[0].toUpperCase() + serviceName.substring(1)
+        const service = this.services[serviceName]
+        if (!service) {
+            throw new Error('Invalid service')
+        }
+
         if (typeof method === 'string') {
             const methodName = method[0].toUpperCase() + method.substring(1)
-            method = this.service.methods[methodName]
+            method = service.methods[methodName]
             if (!method) {
                 throw new Error('Invalid method')
             }
-        } else if (this.service.methodsArray.indexOf(method) === -1) {
+        } else if (service.methodsArray.indexOf(method) === -1) {
             throw new Error('Invalid method')
         }
+
         method.resolve()
         this.handlers[method.name] = handler
     }
