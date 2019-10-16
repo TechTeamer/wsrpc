@@ -33,75 +33,20 @@
  * in the design, construction, operation or maintenance of any military facility.
  */
 
-import {EventEmitter} from 'events'
+import { EventEmitter } from 'events'
 import * as protobuf from 'protobufjs/minimal'
 import * as WebSocket from 'uws'
-import {VError} from 'verror'
+import { VError } from 'verror'
 import * as RPC from '../protocol/rpc'
-import {waitForEvent} from './utils'
+import { waitForEvent } from './utils'
+
+import { IClientEvents } from './interface/IClientEvents'
+import { IClientOptions } from './interface/IClientOptions'
+import { IProtobufType } from './interface/IProtobufType'
+import { IRPCMessage } from './interface/IRPCMessage'
+import { defaultBackoff } from './utils'
 
 export let WS = WebSocket
-
-export interface IProtobufType {
-    encode(message: any, writer?: protobuf.Writer): protobuf.Writer
-    decode(reader: (protobuf.Reader|Uint8Array), length?: number): any
-}
-
-interface IRPCMessage {
-    callback: protobuf.RPCImplCallback,
-    message?: RPC.IMessage,
-    seq: number,
-    timer?: NodeJS.Timer,
-}
-
-/**
- * RPC Client options
- * ------------------
- * *Note* - The options inherited from `WebSocket.IClientOptions` are only
- * valid when running in node.js, they have no effect in the browser.
- */
-export interface IClientOptions extends WebSocket.IClientOptions {
-    /**
-     * Event names to protobuf types, any event assigned a type will have
-     * its payload decoded before the event is posted.
-     */
-    eventTypes?: {[name: string]: IProtobufType}
-    /**
-     * Retry backoff function, returns milliseconds. Default = {@link defaultBackoff}.
-     */
-    backoff?: (tries: number) => number
-    /**
-     * Whether to connect when {@link Client} instance is created. Default = `true`.
-     */
-    autoConnect?: boolean
-    /**
-     * How long in milliseconds before a message times out, set to `0` to disable.
-     * Default = `5 * 1000`.
-     */
-    sendTimeout?: number
-}
-
-/**
- * RPC Client events
- * -----------------
- */
-export interface IClientEvents {
-    /**
-     * Emitted when the connection closes/opens.
-     */
-    on(event: 'open' | 'close', listener: () => void): this
-    /**
-     * Emitted on error, throws if there is no listener.
-     */
-    on(event: 'error', listener: (error: Error) => void): this
-    /**
-     * RPC event sent by the server. If the event name is given a type
-     * constructor in {@link IClientOptions.eventTypes} the data will
-     * be decoded before the event is emitted.
-     */
-    on(event: 'event', listener: (name: string, data?: Uint8Array|{[k: string]: any}) => void): this
-    on(event: 'event <name>', listener: (data?: Uint8Array|{[k: string]: any}) => void): this
-}
 
 /**
  * RPC Client
@@ -165,7 +110,9 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
      */
     public async connect() {
         this.active = true
-        if (this.socket) { return }
+        if (this.socket) {
+            return
+        }
         if (process.title === 'browser') {
             this.socket = new WS(this.address)
             this.socket.addEventListener('message', this.messageHandler)
@@ -182,7 +129,9 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
             }
             this.socket.onclose = this.closeHandler
             this.socket.onerror = (error) => {
-                if (!didOpen) { this.closeHandler() }
+                if (!didOpen) {
+                    this.closeHandler()
+                }
                 this.errorHandler(error)
             }
         }
@@ -203,7 +152,9 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
      */
     public async disconnect() {
         this.active = false
-        if (!this.socket) { return }
+        if (!this.socket) {
+            return
+        }
         if (this.socket.readyState !== WS.CLOSED) {
             this.socket.close()
             await waitForEvent(this, 'close')
@@ -240,6 +191,7 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
 
         const message: RPC.IMessage = {
             request: {
+                // service: ???,
                 method: method.name,
                 payload: requestData,
                 seq,
@@ -247,10 +199,10 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
             type: RPC.Message.Type.REQUEST,
         }
 
-        let timer: NodeJS.Timer|undefined
+        let timer: NodeJS.Timer | undefined
         if (this.sendTimeout > 0) {
             timer = setTimeout(() => {
-                const error = new VError({name: 'TimeoutError'}, `Timed out after ${ this.sendTimeout }ms`)
+                const error = new VError({name: 'TimeoutError'}, `Timed out after ${this.sendTimeout}ms`)
                 this.rpcCallback(seq, error)
             }, this.sendTimeout)
         }
@@ -265,29 +217,39 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
         }
     }
 
-    private rpcCallback = (seq: number, error: Error|null, response?: (Uint8Array|null)) => {
+    private rpcCallback = (seq: number, error: Error | null, response?: (Uint8Array | null)) => {
         if (!this.messageBuffer[seq]) {
-            this.errorHandler(new VError({cause: error}, `Got response for unknown seqNo: ${ seq }`))
+            this.errorHandler(new VError({cause: error}, `Got response for unknown seqNo: ${seq}`))
             return
         }
         const {callback, timer} = this.messageBuffer[seq]
-        if (timer) { clearTimeout(timer) }
+        if (timer) {
+            clearTimeout(timer)
+        }
         delete this.messageBuffer[seq]
         callback(error, response)
     }
 
     private writeMessageNode = async (message: RPC.IMessage) => {
         await new Promise((resolve, reject) => {
-            if (!this.socket) { throw new Error('No socket') }
+            if (!this.socket) {
+                throw new Error('No socket')
+            }
             const data = RPC.Message.encode(message).finish()
             this.socket.send(data, (error: Error) => {
-                if (error) { reject(error) } else { resolve() }
+                if (error) {
+                    reject(error)
+                } else {
+                    resolve()
+                }
             })
         })
     }
 
     private writeMessageBrowser = async (message: RPC.IMessage) => {
-        if (!this.socket) { throw new Error('No socket') }
+        if (!this.socket) {
+            throw new Error('No socket')
+        }
         const data = RPC.Message.encode(message).finish()
         this.socket.send(data)
     }
@@ -321,12 +283,16 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
             switch (message.type) {
                 case RPC.Message.Type.RESPONSE:
                     const response = message.response
-                    if (!response) { throw new Error('Response data missing') }
+                    if (!response) {
+                        throw new Error('Response data missing')
+                    }
                     this.responseHandler(response)
                     break
                 case RPC.Message.Type.EVENT:
                     const eventData = message.event
-                    if (!eventData) { throw new Error('Event data missing') }
+                    if (!eventData) {
+                        throw new Error('Event data missing')
+                    }
                     this.eventHandler(eventData)
                     break
             }
@@ -361,15 +327,7 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
             }
         }
         this.emit('event', event.name, payload)
-        this.emit(`event ${ event.name }`, payload)
+        this.emit(`event ${event.name}`, payload)
     }
 
-}
-
-/**
- * Default backoff function.
- * ```min(tries*10^2, 10 seconds)```
- */
-const defaultBackoff = (tries: number): number => {
-    return Math.min(Math.pow(tries * 10, 2), 10 * 1000)
 }
