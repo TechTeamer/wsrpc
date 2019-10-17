@@ -189,25 +189,29 @@ export class Client extends EventEmitter implements IClientEvents {
         this.flushMessageBuffer().catch(this.errorHandler)
     }
 
-    private rpcImpl: protobuf.RPCImpl = (method, requestData, callback) => {
+    private rpcImpl: protobuf.RPCImpl = (method: any, requestData, callback) => {
         const seq = this.nextSeq
         this.nextSeq = (this.nextSeq + 1) & 0xffff
 
         let message: RPC.IMessage
 
-        if (method instanceof protobuf.Method && method.parent) {
-           message = {
-                request: {
-                    method: method.name,
-                    payload: requestData,
-                    seq,
-                    service: method.parent.name,
-                },
-                type: RPC.Message.Type.REQUEST,
-            }
-        } else {
+        if (!method) {
+            throw new Error('Missing method')
+        }
+
+        if (!method.parent || !method.parent.name) {
             // We need to let the rpc service creation to the Client class...
-            throw new Error('Client expects a protobuf.Service instead of a protobuf.rpc.Service.')
+            throw new Error('Client expects a protobuf.Service instead of a protobuf.rpc.Service')
+        }
+
+        message = {
+            request: {
+                method: method.name,
+                payload: requestData,
+                seq,
+                service: method.parent.name,
+            },
+            type: RPC.Message.Type.REQUEST,
         }
 
         let timer: NodeJS.Timer | undefined
