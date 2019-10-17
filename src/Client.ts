@@ -53,7 +53,7 @@ export let WS = WebSocket
  * ----------
  * Can be used in both node.js and the browser. Also see {@link IClientOptions}.
  */
-export class Client<T extends protobuf.rpc.Service> extends EventEmitter implements IClientEvents {
+export class Client extends EventEmitter implements IClientEvents {
 
     /**
      * Client options, *readonly*.
@@ -63,7 +63,7 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
     /**
      * The protobuf service instance which holds all the rpc methods defined in your protocol.
      */
-    public readonly service: T
+    public readonly service: protobuf.rpc.Service
 
     private active: boolean = false
     private address: string
@@ -82,7 +82,7 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
      *                will be available as {@link Client.service}.
      * @param options Client options {@see IClientOptions}
      */
-    constructor(address: string, service: {create(rpcImpl: protobuf.RPCImpl): T}, options: IClientOptions = {}) {
+    constructor(address: string, service:  protobuf.Service, options: IClientOptions = {}) {
         super()
 
         this.address = address
@@ -190,14 +190,21 @@ export class Client<T extends protobuf.rpc.Service> extends EventEmitter impleme
         const seq = this.nextSeq
         this.nextSeq = (this.nextSeq + 1) & 0xffff
 
-        const message: RPC.IMessage = {
-            request: {
-                method: method.name,
-                payload: requestData,
-                seq,
-                service: 'TestService',
-            },
-            type: RPC.Message.Type.REQUEST,
+        let message: RPC.IMessage
+
+        if (method instanceof protobuf.Method && method.parent) {
+           message = {
+                request: {
+                    method: method.name,
+                    payload: requestData,
+                    seq,
+                    service: method.parent.name,
+                },
+                type: RPC.Message.Type.REQUEST,
+            }
+        } else {
+            // We need to let the rpc service creation to the Client class...
+            throw new Error('Client expects a protobuf.Service instead of a protobuf.rpc.Service.')
         }
 
         let timer: NodeJS.Timer | undefined

@@ -17,7 +17,7 @@ const testAddr = `ws://localhost:${testPort}`
 const testProtoPath = path.join(__dirname, './../protocol/test.proto')
 const testProto = protobuf.loadSync(testProtoPath)
 
-const serverService = testProto.lookupService('TestService')
+const testService = testProto.lookupService('TestService')
 const serverOpts = {
     port: testPort,
     pingInterval: 0.05,
@@ -27,7 +27,7 @@ describe('rpc', () => {
 
     let planError = false
 
-    let server = new Server([serverService], serverOpts)
+    let server = new Server([testService], serverOpts)
 
     server.implement('TestService', 'echo', async (request: TextMessage) => {
         if (request.text === 'throw-string') {
@@ -39,7 +39,7 @@ describe('rpc', () => {
         return {text: request.text}
     })
 
-    server.implement('TestService', serverService.methods['Upper'], (request: TextMessage) => {
+    server.implement('TestService', testService.methods['Upper'], (request: TextMessage) => {
         return new Promise((resolve, reject) => {
             const text = request.text.toUpperCase()
             setTimeout(() => {
@@ -54,7 +54,7 @@ describe('rpc', () => {
         }
     })
 
-    const client = new Client(testAddr, TestService, {
+    const client = new Client(testAddr, testProto.lookupService('TestService'), {
         sendTimeout: 100,
         eventTypes: {
             'text': TextMessage
@@ -83,12 +83,14 @@ describe('rpc', () => {
     })
 
     it('should run echo rpc method', async function () {
+        // @ts-ignore
         const response = await client.service.echo({text: 'hello world'})
         assert.equal(response.text, 'hello world')
     })
 
     it('should run upper rpc method', async function () {
         this.slow(150)
+        // @ts-ignore
         const response = await client.service.upper({text: 'hello world'})
         assert.equal(response.text, 'HELLO WORLD')
     })
@@ -96,6 +98,7 @@ describe('rpc', () => {
     it('should handle thrown errors in implementation handler', async function () {
         planError = true
         try {
+            // @ts-ignore
             await client.service.echo({text: 'throw'})
             assert(false, 'should not be reached')
         } catch (error) {
@@ -106,6 +109,7 @@ describe('rpc', () => {
 
     it('should handle thrown strings in implementation handler', async function () {
         try {
+            // @ts-ignore
             await client.service.echo({text: 'throw-string'})
             assert(false, 'should not be reached')
         } catch (error) {
@@ -116,6 +120,7 @@ describe('rpc', () => {
 
     it('should handle unimplemented methods', async function () {
         try {
+            // @ts-ignore
             await client.service.notImplemented({})
             assert(false, 'should throw')
         } catch (error) {
@@ -216,6 +221,7 @@ describe('rpc', () => {
     it('should timeout messages', async function () {
         planError = false
         this.slow(300)
+        // @ts-ignore
         const response = client.service.echo({text: 'foo'})
         await client.disconnect()
         try {
@@ -228,6 +234,7 @@ describe('rpc', () => {
 
     it('should reconnect', async function () {
         await client.connect()
+        // @ts-ignore
         const response = await client.service.echo({text: 'baz'})
         assert(response.text, 'baz')
     })
@@ -241,7 +248,9 @@ describe('rpc', () => {
         server.connections[0].close()
         await waitForEvent(client, 'close')
 
+        // @ts-ignore
         const buzz = client.service.echo({text: 'fizz'})
+        // @ts-ignore
         const fizz = client.service.echo({text: 'buzz'})
         const response = await Promise.all([buzz, fizz])
         assert.deepEqual(response.map((msg) => msg.text), ['fizz', 'buzz'])
@@ -255,7 +264,7 @@ describe('rpc', () => {
         // force a connection failure to simulate server being down for a bit
         await client.connect()
         planError = false
-        server = new Server([serverService], serverOpts)
+        server = new Server([testService], serverOpts)
         await waitForEvent(client, 'open')
     })
 
@@ -264,6 +273,7 @@ describe('rpc', () => {
             throw new Error('boom')
         }
         try {
+            // @ts-ignore
             await client.service.echo({text: 'boom'})
             assert(false, 'should not be reached')
         } catch (error) {
@@ -278,20 +288,20 @@ describe('rpc', () => {
 
 })
 
-describe('rpc browser client', function () {
+describe('rpc browser client', () => {
     // simulated browser test using the ws module
 
     let server: Server
-    let client: Client<TestService>
+    let client: Client // Should be Client<testService>
 
     before(async function () {
         (<any>wsrpc_client).WS = WebSocket
         process.title = 'browser'
-        server = new Server([serverService], serverOpts)
+        server = new Server([testService], serverOpts)
         server.implement('TestService', 'echo', async (request: TextMessage) => {
             return {text: request.text}
         })
-        client = new Client(testAddr, TestService)
+        client = new Client(testAddr, testService)
     })
 
     after(async function () {
@@ -300,6 +310,7 @@ describe('rpc browser client', function () {
     })
 
     it('should work', async function () {
+        // @ts-ignore
         const response = await client.service.echo({text: 'foo'})
         assert.equal(response.text, 'foo')
     })
