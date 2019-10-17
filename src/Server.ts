@@ -59,7 +59,7 @@ export class Server extends EventEmitter implements IServerEvents {
     /**
      * Implemented RPC method handlers, read-only. {@see Service.implement}
      */
-    public readonly handlers: {[name: string]: Handler} = {}
+    public readonly handlers: {[serviceName: string]: {[methodName: string]: Handler}} = {}
 
     /**
      * Server options, read-only.
@@ -88,6 +88,7 @@ export class Server extends EventEmitter implements IServerEvents {
 
         services.forEach((service) => {
             this.services[service.name] = service
+            this.handlers[service.name] = {}
         })
 
         this.options = options
@@ -133,7 +134,7 @@ export class Server extends EventEmitter implements IServerEvents {
         }
 
         method.resolve()
-        this.handlers[method.name] = handler
+        this.handlers[serviceName][method.name] = handler
     }
 
     /**

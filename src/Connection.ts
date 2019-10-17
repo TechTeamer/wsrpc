@@ -72,7 +72,8 @@ export class Connection extends EventEmitter {
         const methodName = request.method[0].toUpperCase() + request.method.substring(1)
 
         const service = this.server.services[serviceName]
-        if (!service) {
+        const serviceHandlers = this.server.handlers[serviceName]
+        if (!service || !serviceHandlers) {
             throw new Error('Invalid service')
         }
         const method = service.methods[methodName]
@@ -80,7 +81,7 @@ export class Connection extends EventEmitter {
             throw new Error('Invalid method')
         }
 
-        const impl = this.server.handlers[methodName]
+        const impl = serviceHandlers[methodName]
         if (!impl) {
             throw new Error('Not implemented')
         }
