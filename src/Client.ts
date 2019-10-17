@@ -35,6 +35,7 @@
 
 import { EventEmitter } from 'events'
 import * as protobuf from 'protobufjs/minimal'
+import { Method } from 'protobufjs'
 import * as WebSocket from 'uws'
 import { VError } from 'verror'
 import * as RPC from '../protocol/rpc'
@@ -195,7 +196,7 @@ export class Client extends EventEmitter implements IClientEvents {
 
         let message: RPC.IMessage
 
-        if (method instanceof protobuf.Method && method.parent) {
+        if (method instanceof Method && method.parent) {
            message = {
                 request: {
                     method: method.name,
