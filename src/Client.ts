@@ -61,9 +61,9 @@ export class Client extends EventEmitter implements IClientEvents {
     public readonly options: IClientOptions
 
     /**
-     * The protobuf service instance which holds all the rpc methods defined in your protocol.
+     * Protobuf rpc service instances.
      */
-    public readonly service: protobuf.rpc.Service
+    public readonly services: {[name: string]: protobuf.rpc.Service} = {}
 
     private active: boolean = false
     private address: string
@@ -78,16 +78,19 @@ export class Client extends EventEmitter implements IClientEvents {
 
     /**
      * @param address The address to the {@link Server}, eg `ws://example.com:8042`.
-     * @param service The protocol buffer service class to use, an instance of this
+     * @param services The protocol buffer service class to use, an instance of this
      *                will be available as {@link Client.service}.
      * @param options Client options {@see IClientOptions}
      */
-    constructor(address: string, service:  protobuf.Service, options: IClientOptions = {}) {
+    constructor(address: string, services: protobuf.Service[], options: IClientOptions = {}) {
         super()
 
         this.address = address
         this.options = options
-        this.service = service.create(this.rpcImpl)
+
+        services.forEach((service) => {
+            this.services[service.name] = service.create(this.rpcImpl)
+        })
 
         this.eventTypes = options.eventTypes || {}
         this.backoff = options.backoff || defaultBackoff

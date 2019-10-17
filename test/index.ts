@@ -17,7 +17,7 @@ const testAddr = `ws://localhost:${testPort}`
 const testProtoPath = path.join(__dirname, './../protocol/test.proto')
 const testProto = protobuf.loadSync(testProtoPath)
 
-const testService = testProto.lookupService('TestService')
+const testService: protobuf.Service = testProto.lookupService('TestService')
 const serverOpts = {
     port: testPort,
     pingInterval: 0.05,
@@ -54,7 +54,7 @@ describe('rpc', () => {
         }
     })
 
-    const client = new Client(testAddr, testProto.lookupService('TestService'), {
+    const client = new Client(testAddr, [testService], {
         sendTimeout: 100,
         eventTypes: {
             'text': TextMessage
@@ -84,14 +84,14 @@ describe('rpc', () => {
 
     it('should run echo rpc method', async function () {
         // @ts-ignore
-        const response = await client.service.echo({text: 'hello world'})
+        const response = await client.services['TestService'].echo({text: 'hello world'})
         assert.equal(response.text, 'hello world')
     })
 
     it('should run upper rpc method', async function () {
         this.slow(150)
         // @ts-ignore
-        const response = await client.service.upper({text: 'hello world'})
+        const response = await client.services['TestService'].upper({text: 'hello world'})
         assert.equal(response.text, 'HELLO WORLD')
     })
 
@@ -99,7 +99,7 @@ describe('rpc', () => {
         planError = true
         try {
             // @ts-ignore
-            await client.service.echo({text: 'throw'})
+            await client.services['TestService'].echo({text: 'throw'})
             assert(false, 'should not be reached')
         } catch (error) {
             assert.equal(error.name, 'RPCError')
@@ -110,7 +110,7 @@ describe('rpc', () => {
     it('should handle thrown strings in implementation handler', async function () {
         try {
             // @ts-ignore
-            await client.service.echo({text: 'throw-string'})
+            await client.services['TestService'].echo({text: 'throw-string'})
             assert(false, 'should not be reached')
         } catch (error) {
             assert.equal(error.name, 'RPCError')
@@ -121,7 +121,7 @@ describe('rpc', () => {
     it('should handle unimplemented methods', async function () {
         try {
             // @ts-ignore
-            await client.service.notImplemented({})
+            await client.services['TestService'].notImplemented({})
             assert(false, 'should throw')
         } catch (error) {
             assert.equal(error.name, 'RPCError')
@@ -222,7 +222,7 @@ describe('rpc', () => {
         planError = false
         this.slow(300)
         // @ts-ignore
-        const response = client.service.echo({text: 'foo'})
+        const response = client.services['TestService'].echo({text: 'foo'})
         await client.disconnect()
         try {
             await response
@@ -235,7 +235,7 @@ describe('rpc', () => {
     it('should reconnect', async function () {
         await client.connect()
         // @ts-ignore
-        const response = await client.service.echo({text: 'baz'})
+        const response = await client.services['TestService'].echo({text: 'baz'})
         assert(response.text, 'baz')
     })
 
@@ -249,9 +249,9 @@ describe('rpc', () => {
         await waitForEvent(client, 'close')
 
         // @ts-ignore
-        const buzz = client.service.echo({text: 'fizz'})
+        const buzz = client.services['TestService'].echo({text: 'fizz'})
         // @ts-ignore
-        const fizz = client.service.echo({text: 'buzz'})
+        const fizz = client.services['TestService'].echo({text: 'buzz'})
         const response = await Promise.all([buzz, fizz])
         assert.deepEqual(response.map((msg) => msg.text), ['fizz', 'buzz'])
     })
@@ -274,7 +274,7 @@ describe('rpc', () => {
         }
         try {
             // @ts-ignore
-            await client.service.echo({text: 'boom'})
+            await client.services['TestService'].echo({text: 'boom'})
             assert(false, 'should not be reached')
         } catch (error) {
             assert.equal(error.message, 'boom')
@@ -301,7 +301,7 @@ describe('rpc browser client', () => {
         server.implement('TestService', 'echo', async (request: TextMessage) => {
             return {text: request.text}
         })
-        client = new Client(testAddr, testService)
+        client = new Client(testAddr, [testService])
     })
 
     after(async function () {
@@ -311,7 +311,7 @@ describe('rpc browser client', () => {
 
     it('should work', async function () {
         // @ts-ignore
-        const response = await client.service.echo({text: 'foo'})
+        const response = await client.services['TestService'].echo({text: 'foo'})
         assert.equal(response.text, 'foo')
     })
 })
