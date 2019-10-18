@@ -12,7 +12,7 @@ export interface IClientOptions extends WebSocket.IClientOptions {
      * Event names to protobuf types, any event assigned a type will have
      * its payload decoded before the event is posted.
      */
-    eventTypes?: { [name: string]: IProtobufType }
+    eventTypes?: {[name: string]: IProtobufType}
     /**
      * Retry backoff function, returns milliseconds. Default = {@link defaultBackoff}.
      */

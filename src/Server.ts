@@ -110,7 +110,7 @@ export class Server extends EventEmitter implements IServerEvents {
             this.emit('listening')
         })
         this.server.on('error', (cause: any) => {
-            this.emit('error', new VError({name: 'WebSocketError', cause}, 'server error'))
+            this.emit('error', new VError({ name: 'WebSocketError', cause }, 'server error'))
         })
         this.server.on('connection', this.connectionHandler.bind(this))
         this.server.on('headers', (headers) => {
@@ -123,7 +123,7 @@ export class Server extends EventEmitter implements IServerEvents {
      */
     get service(): protobuf.Service | undefined {
         const serviceNames = Object.keys(this.services)
-        if(serviceNames.length === 0) {
+        if (serviceNames.length === 0) {
             return undefined
         }
 
@@ -228,7 +228,7 @@ export class Server extends EventEmitter implements IServerEvents {
         this.connections.push(connection)
 
         connection.on('error', (cause: Error) => {
-            const error: Error = new VError({name: 'ConnectionError', cause}, 'connection error')
+            const error: Error = new VError({ name: 'ConnectionError', cause }, 'connection error')
             this.emit('error', error)
         })
 

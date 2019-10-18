@@ -90,7 +90,7 @@ export class Client extends EventEmitter implements IClientEvents {
 
         if (!Array.isArray(services)) {
             // Single service usage
-            services = [ services ]
+            services = [services]
         }
 
         services.forEach((service) => {
@@ -112,7 +112,7 @@ export class Client extends EventEmitter implements IClientEvents {
      */
     get service(): protobuf.rpc.Service | undefined {
         const serviceNames = Object.keys(this.services)
-        if(serviceNames.length === 0) {
+        if (serviceNames.length === 0) {
             return undefined
         }
 
@@ -234,11 +234,11 @@ export class Client extends EventEmitter implements IClientEvents {
         let timer: NodeJS.Timer | undefined
         if (this.sendTimeout > 0) {
             timer = setTimeout(() => {
-                const error = new VError({name: 'TimeoutError'}, `Timed out after ${this.sendTimeout}ms`)
+                const error = new VError({ name: 'TimeoutError' }, `Timed out after ${this.sendTimeout}ms`)
                 this.rpcCallback(seq, error)
             }, this.sendTimeout)
         }
-        this.messageBuffer[seq] = {seq, callback, timer}
+        this.messageBuffer[seq] = { seq, callback, timer }
 
         if (this.isConnected()) {
             this.writeMessage(message).catch((error: Error) => {
@@ -251,10 +251,10 @@ export class Client extends EventEmitter implements IClientEvents {
 
     private rpcCallback = (seq: number, error: Error | null, response?: (Uint8Array | null)) => {
         if (!this.messageBuffer[seq]) {
-            this.errorHandler(new VError({cause: error}, `Got response for unknown seqNo: ${seq}`))
+            this.errorHandler(new VError({ cause: error }, `Got response for unknown seqNo: ${seq}`))
             return
         }
-        const {callback, timer} = this.messageBuffer[seq]
+        const { callback, timer } = this.messageBuffer[seq]
         if (timer) {
             clearTimeout(timer)
         }
@@ -329,14 +329,14 @@ export class Client extends EventEmitter implements IClientEvents {
                     break
             }
         } catch (cause) {
-            const error = new VError({cause, name: 'MessageError'}, 'got invalid message')
+            const error = new VError({ cause, name: 'MessageError' }, 'got invalid message')
             this.errorHandler(error)
         }
     }
 
     private async responseHandler(response: RPC.IResponse) {
         if (!response.ok) {
-            this.rpcCallback(response.seq, new VError({name: 'RPCError'}, response.error || 'Unknown error'))
+            this.rpcCallback(response.seq, new VError({ name: 'RPCError' }, response.error || 'Unknown error'))
         } else {
             this.rpcCallback(response.seq, null, response.payload)
         }
@@ -350,7 +350,7 @@ export class Client extends EventEmitter implements IClientEvents {
                 try {
                     payload = type.decode(event.payload)
                 } catch (cause) {
-                    const error = new VError({cause, name: 'EventError'}, 'could not decode event payload')
+                    const error = new VError({ cause, name: 'EventError' }, 'could not decode event payload')
                     this.errorHandler(error)
                     return
                 }

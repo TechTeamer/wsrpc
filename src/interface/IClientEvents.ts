@@ -14,7 +14,7 @@ export interface IClientEvents {
      * constructor in {@link IClientOptions.eventTypes} the data will
      * be decoded before the event is emitted.
      */
-    on(event: 'event', listener: (name: string, data?: Uint8Array | { [k: string]: any }) => void): this
+    on(event: 'event', listener: (name: string, data?: Uint8Array | {[k: string]: any}) => void): this
 
-    on(event: 'event <name>', listener: (data?: Uint8Array | { [k: string]: any }) => void): this
+    on(event: 'event <name>', listener: (data?: Uint8Array | {[k: string]: any}) => void): this
 }

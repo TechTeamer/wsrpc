@@ -43,7 +43,7 @@ export class Connection extends EventEmitter {
      */
     public send(name: string, payload?: Uint8Array): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            const event: RPC.IEvent = {name}
+            const event: RPC.IEvent = { name }
             if (payload) {
                 event.payload = payload
             }
@@ -101,7 +101,7 @@ export class Connection extends EventEmitter {
             throw error
         }
 
-        const response = new RPC.Response({seq: request.seq, ok: true})
+        const response = new RPC.Response({ seq: request.seq, ok: true })
         response.payload = method.resolvedResponseType.encode(responseData).finish()
 
         return response
@@ -119,12 +119,12 @@ export class Connection extends EventEmitter {
             }
             request = new RPC.Request(message.request)
         } catch (cause) {
-            const error = new VError({name: 'RequestError', cause}, 'could not decode message')
+            const error = new VError({ name: 'RequestError', cause }, 'could not decode message')
             this.emit('error', error)
             return
         }
         this.requestHandler(request).then((response) => {
-            const message = RPC.Message.encode({type: RPC.Message.Type.RESPONSE, response}).finish()
+            const message = RPC.Message.encode({ type: RPC.Message.Type.RESPONSE, response }).finish()
             this.socket.send(message)
         }).catch((error: Error) => {
             const message = RPC.Message.encode({
