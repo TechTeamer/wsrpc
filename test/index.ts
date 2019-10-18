@@ -393,12 +393,6 @@ describe('rpc with multiple services', () => {
         assert.strictEqual(response.text, 'hello world')
     })
 
-    it('should run TestService1.echo rpc method', async function () {
-        // @ts-ignore
-        const response = await client.services.TestService1.echo({ text: 'hello world' })
-        assert.strictEqual(response.text, 'hello world')
-    })
-
     it('should run TestService1.upper rpc method', async function () {
         this.slow(150)
         // @ts-ignore
