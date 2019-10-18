@@ -8,7 +8,8 @@ import * as crypto from 'crypto'
 import { Server, Client } from '../src'
 import * as wsrpc_client from '../src/Client'
 import { waitForEvent } from '../src/utils'
-import { TestService, TextMessage } from '../protocol/test'
+import { TextMessage } from '../protocol/test1'
+import { TS2Message } from '../protocol/test2'
 import * as rpcproto from '../protocol/rpc'
 import * as WebSocket from 'ws'
 
@@ -36,47 +37,54 @@ describe('rpc with a single service', () => {
 
     let planError = false
 
-    let server = new Server(testService1, serverOpts)
+    let server: Server
+    let client: Client
 
-    server.implement('echo', async (request: TextMessage) => {
-        if (request.text === 'throw-string') {
-            throw 'You should always trow an error object'
-        }
-        if (request.text === 'throw') {
-            throw new Error('Since you asked for it')
-        }
-        return {text: request.text}
-    })
+    before(async () => {
+        server = new Server(testService1, serverOpts)
 
-    server.implement(testService1.methods['Upper'], (request: TextMessage) => {
-        return new Promise((resolve, reject) => {
-            const text = request.text.toUpperCase()
-            setTimeout(() => {
-                resolve({text})
-            }, 50)
+        server.implement('echo', async (request: TextMessage) => {
+            if (request.text === 'throw-string') {
+                throw 'You should always trow an error object'
+            }
+            if (request.text === 'throw') {
+                throw new Error('Since you asked for it')
+            }
+            return { text: request.text }
+        })
+
+        server.implement(testService1.methods['Upper'], (request: TextMessage) => {
+            return new Promise((resolve, reject) => {
+                const text = request.text.toUpperCase()
+                setTimeout(() => {
+                    resolve({ text })
+                }, 50)
+            })
+        })
+
+        server.on('error', (error: Error) => {
+            if (!planError) {
+                console.warn('unplanned server error', error.message)
+            }
+        })
+
+        client = new Client(testAddr, testService1, {
+            sendTimeout: 100,
+            eventTypes: {
+                'text': TextMessage
+            }
+        })
+
+        client.on('error', (error: Error) => {
+            if (!planError) {
+                console.warn('unplanned client error', error.message)
+            }
         })
     })
 
-    server.on('error', (error: Error) => {
-        if (!planError) {
-            console.warn('unplanned server error', error.message)
-        }
+    after(async () => {
+        await client.disconnect()
     })
-
-    const client = new Client(testAddr, testService1, {
-        sendTimeout: 100,
-        eventTypes: {
-            'text': TextMessage
-        }
-    })
-
-    client.on('error', (error: Error) => {
-        if (!planError) {
-            console.warn('unplanned client error', error.message)
-        }
-    })
-
-    after(async () => await client.disconnect())
 
     it('should throw when implementing invalid method', function () {
         assert.throws(() => {
@@ -94,14 +102,14 @@ describe('rpc with a single service', () => {
 
     it('should run echo rpc method', async function () {
         // @ts-ignore
-        const response = await client.service.echo({text: 'hello world'})
+        const response = await client.service.echo({ text: 'hello world' })
         assert.strictEqual(response.text, 'hello world')
     })
 
     it('should run upper rpc method', async function () {
         this.slow(150)
         // @ts-ignore
-        const response = await client.service.upper({text: 'hello world'})
+        const response = await client.service.upper({ text: 'hello world' })
         assert.strictEqual(response.text, 'HELLO WORLD')
     })
 
@@ -109,7 +117,7 @@ describe('rpc with a single service', () => {
         planError = true
         try {
             // @ts-ignore
-            await client.service.echo({text: 'throw'})
+            await client.service.echo({ text: 'throw' })
             assert(false, 'should not be reached')
         } catch (error) {
             assert.strictEqual(error.name, 'RPCError')
@@ -120,7 +128,7 @@ describe('rpc with a single service', () => {
     it('should handle thrown strings in implementation handler', async function () {
         try {
             // @ts-ignore
-            await client.service.echo({text: 'throw-string'})
+            await client.service.echo({ text: 'throw-string' })
             assert(false, 'should not be reached')
         } catch (error) {
             assert.strictEqual(error.name, 'RPCError')
@@ -227,7 +235,7 @@ describe('rpc with a single service', () => {
 
     it('should emit typed event', function (done) {
         const text = 'I like les turlos'
-        server.broadcast('text', TextMessage.encode({text}).finish())
+        server.broadcast('text', TextMessage.encode({ text }).finish())
         client.once('event', (name: string, payload: TextMessage) => {
             assert.strictEqual(name, 'text')
             assert.strictEqual(payload.text, text)
@@ -249,7 +257,7 @@ describe('rpc with a single service', () => {
         planError = false
         this.slow(300)
         // @ts-ignore
-        const response = client.service.echo({text: 'foo'})
+        const response = client.service.echo({ text: 'foo' })
         await client.disconnect()
         try {
             await response
@@ -262,7 +270,7 @@ describe('rpc with a single service', () => {
     it('should reconnect', async function () {
         await client.connect()
         // @ts-ignore
-        const response = await client.service.echo({text: 'baz'})
+        const response = await client.service.echo({ text: 'baz' })
         assert(response.text, 'baz')
     })
 
@@ -276,9 +284,9 @@ describe('rpc with a single service', () => {
         await waitForEvent(client, 'close')
 
         // @ts-ignore
-        const buzz = client.service.echo({text: 'fizz'})
+        const buzz = client.service.echo({ text: 'fizz' })
         // @ts-ignore
-        const fizz = client.service.echo({text: 'buzz'})
+        const fizz = client.service.echo({ text: 'buzz' })
         const response = await Promise.all([buzz, fizz])
         assert.deepEqual(response.map((msg) => msg.text), ['fizz', 'buzz'])
     })
@@ -301,7 +309,7 @@ describe('rpc with a single service', () => {
         }
         try {
             // @ts-ignore
-            await client.service.echo({text: 'boom'})
+            await client.service.echo({ text: 'boom' })
             assert(false, 'should not be reached')
         } catch (error) {
             assert.strictEqual(error.message, 'boom')
@@ -312,11 +320,75 @@ describe('rpc with a single service', () => {
         server.close()
         await waitForEvent(client, 'close')
     })
-
 })
 
 describe('rpc with multiple services', () => {
 
+    let planError = false
+
+    let server: Server
+    let client: Client
+
+    before(async () => {
+        server = new Server(testServices, serverOpts)
+
+        server.implement('testService1', 'echo', async (request: TextMessage) => {
+            if (request.text === 'throw-string') {
+                throw 'You should always trow an error object'
+            }
+            if (request.text === 'throw') {
+                throw new Error('Since you asked for it')
+            }
+            return { text: request.text }
+        })
+
+        server.implement(testService1.methods['Upper'], (request: TextMessage) => {
+            return new Promise((resolve, reject) => {
+                const text = request.text.toUpperCase()
+                setTimeout(() => {
+                    resolve({ text })
+                }, 50)
+            })
+        })
+
+        server.implement(testService2.methods['Echo'], async (request: TS2Message) => {
+            return { text: request.text }
+        })
+
+        server.on('error', (error: Error) => {
+            if (!planError) {
+                console.warn('unplanned server error', error.message)
+            }
+        })
+
+        client = new Client(testAddr, testServices, {
+            sendTimeout: 100,
+            eventTypes: {
+                'text': TextMessage
+            }
+        })
+
+        client.on('error', (error: Error) => {
+            if (!planError) {
+                console.warn('unplanned client error', error.message)
+            }
+        })
+    })
+
+    after(async () => {
+        await client.disconnect()
+    })
+
+    it('should run echo rpc method', async function () {
+        // @ts-ignore
+        const response = await client.services.TestService1.echo({ text: 'hello world' })
+        assert.strictEqual(response.text, 'hello world')
+    })
+
+    it('should close server', async function () {
+        server.close()
+        await waitForEvent(client, 'close')
+    })
 })
 
 describe('rpc browser client', () => {
@@ -330,7 +402,7 @@ describe('rpc browser client', () => {
         process.title = 'browser'
         server = new Server([testService1], serverOpts)
         server.implement(testService1, testService1.methods.Echo, async (request: TextMessage) => {
-            return {text: request.text}
+            return { text: request.text }
         })
         client = new Client(testAddr, [testService1])
     })
@@ -342,7 +414,7 @@ describe('rpc browser client', () => {
 
     it('should work', async function () {
         // @ts-ignore
-        const response = await client.service.echo({text: 'foo'})
+        const response = await client.service.echo({ text: 'foo' })
         assert.strictEqual(response.text, 'foo')
     })
 })
