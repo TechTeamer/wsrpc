@@ -65,6 +65,11 @@ export class Client extends EventEmitter implements IClientEvents {
      */
     public readonly services: {[name: string]: protobuf.rpc.Service} = {}
 
+    /**
+     * Default service accessor when using a single service only. (backwards compatibility)
+     */
+    public readonly service?: protobuf.rpc.Service
+
     private active: boolean = false
     private address: string
     private backoff: (tries: number) => number
@@ -97,6 +102,11 @@ export class Client extends EventEmitter implements IClientEvents {
             this.services[service.name] = service.create(this.rpcImpl)
         })
 
+        if (services.length === 1) {
+            // Set the default service (backwards compatibility)
+            this.service = this.services[services[0].name]
+        }
+
         this.eventTypes = options.eventTypes || {}
         this.backoff = options.backoff || defaultBackoff
         this.writeMessage = process.title === 'browser' ? this.writeMessageBrowser : this.writeMessageNode
@@ -105,22 +115,6 @@ export class Client extends EventEmitter implements IClientEvents {
         if (options.autoConnect === undefined || options.autoConnect) {
             this.connect()
         }
-    }
-
-    /**
-     * Get "default" service. (backwards compatibility)
-     */
-    get service(): protobuf.rpc.Service | undefined {
-        const serviceNames = Object.keys(this.services)
-        if (serviceNames.length === 0) {
-            return undefined
-        }
-
-        if (serviceNames.length > 1) {
-            throw new Error('Multi service usage detected! There is no default service!')
-        }
-
-        return this.services[serviceNames[0]]
     }
 
     /**

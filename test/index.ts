@@ -413,14 +413,18 @@ describe('rpc with multiple services', () => {
         assert.strictEqual(response.madeBy, 'collisionTestService')
     })
 
+    it('should return undefined when trying to access default service', async function () {
+        assert.strictEqual(typeof client.service, 'undefined')
+    })
+
     it('should throw when trying to use default service', async function () {
         try {
             // @ts-ignore
             await client.service.echo({ text: 'hello world' })
             assert(false, 'client should throw')
         } catch (error) {
-            assert.strictEqual(error.name, 'Error')
-            assert.strictEqual(error.message, 'Multi service usage detected! There is no default service!')
+            assert.strictEqual(error.name, 'TypeError')
+            assert.strictEqual(error.message, 'Cannot read property \'echo\' of undefined')
         }
     })
 

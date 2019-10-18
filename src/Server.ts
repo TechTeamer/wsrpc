@@ -72,6 +72,11 @@ export class Server extends EventEmitter implements IServerEvents {
     public readonly services: {[name: string]: protobuf.Service} = {}
 
     /**
+     * Default service accessor when using a single service only. (backwards compatibility)
+     */
+    public readonly service?: protobuf.Service
+
+    /**
      * The underlying uWebSocket server, internal.
      */
     public readonly server: WebSocket.Server
@@ -96,6 +101,11 @@ export class Server extends EventEmitter implements IServerEvents {
             this.handlers[service.name] = {}
         })
 
+        if (services.length === 1) {
+            // Set the default service (backwards compatibility)
+            this.service = this.services[services[0].name]
+        }
+
         this.options = options
 
         options.clientTracking = false
@@ -116,22 +126,6 @@ export class Server extends EventEmitter implements IServerEvents {
         this.server.on('headers', (headers) => {
             this.emit('headers', headers)
         })
-    }
-
-    /**
-     * Get "default" service. (backwards compatibility)
-     */
-    get service(): protobuf.Service | undefined {
-        const serviceNames = Object.keys(this.services)
-        if (serviceNames.length === 0) {
-            return undefined
-        }
-
-        if (serviceNames.length > 1) {
-            throw new Error('Multi service usage detected! There is no default service!')
-        }
-
-        return this.services[serviceNames[0]]
     }
 
     /**
