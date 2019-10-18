@@ -112,7 +112,7 @@ export class Server extends EventEmitter implements IServerEvents {
         this.server.on('error', (cause: any) => {
             this.emit('error', new VError({name: 'WebSocketError', cause}, 'server error'))
         })
-        this.server.on('connection', this.connectionHandler)
+        this.server.on('connection', this.connectionHandler.bind(this))
         this.server.on('headers', (headers) => {
             this.emit('headers', headers)
         })
@@ -121,8 +121,8 @@ export class Server extends EventEmitter implements IServerEvents {
     /**
      * Implement a RPC method defined in a protobuf service.
      */
-    public implement(method: protobuf.Method | string, handler: Handler): void;
-    public implement(service: protobuf.Service | string, method: protobuf.Method | string, handler: Handler): void;
+    public implement(method: protobuf.Method | string, handler: Handler): void
+    public implement(service: protobuf.Service | string, method: protobuf.Method | string, handler: Handler): void
 
     public implement(service: any, method: any, handler: any = null): void {
         if (!handler) {
@@ -134,6 +134,30 @@ export class Server extends EventEmitter implements IServerEvents {
         return this.implementServiceMethod(service, method, handler)
     }
 
+    /**
+     * Send event to all connected clients. {@see Connection.send}
+     */
+    public async broadcast(name: string, payload?: Uint8Array) {
+        const promises = this.connections.map((connection) => {
+            connection.send(name, payload)
+        })
+        await Promise.all(promises)
+    }
+
+    /**
+     * Stop listening and close all connections.
+     */
+    public close() {
+        this.connections.forEach((connection) => {
+            connection.close()
+        })
+        this.server.close()
+    }
+
+    /**
+     * Get a service name for the given method.
+     * If we only have a single service use it as a default.
+     */
     private resolveService(method: string | protobuf.Method): string {
         if (Object.keys(this.services).length === 0) {
             throw new Error('There are no services!')
@@ -154,7 +178,14 @@ export class Server extends EventEmitter implements IServerEvents {
         return method.parent.name[0].toUpperCase() + method.parent.name.substring(1)
     }
 
-    private implementServiceMethod(service: protobuf.Service | string, method: protobuf.Method | string, handler: Handler): void {
+    /**
+     * Register a handler for an rpc method of the service.
+     */
+    private implementServiceMethod(
+        service: protobuf.Service | string,
+        method: protobuf.Method | string,
+        handler: Handler,
+    ): void {
         let serviceName
         if (typeof service === 'string') {
             serviceName = service[0].toUpperCase() + service.substring(1)
@@ -180,27 +211,7 @@ export class Server extends EventEmitter implements IServerEvents {
         this.handlers[serviceName][method.name] = handler
     }
 
-    /**
-     * Send event to all connected clients. {@see Connection.send}
-     */
-    public async broadcast(name: string, payload?: Uint8Array) {
-        const promises = this.connections.map((connection) => {
-            connection.send(name, payload)
-        })
-        await Promise.all(promises)
-    }
-
-    /**
-     * Stop listening and close all connections.
-     */
-    public close() {
-        this.connections.forEach((connection) => {
-            connection.close()
-        })
-        this.server.close()
-    }
-
-    private connectionHandler = (socket: WebSocket) => {
+    private connectionHandler(socket: WebSocket) {
         const connection = new Connection(socket, this, ++this.connectionCounter)
         this.connections.push(connection)
 
