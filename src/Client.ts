@@ -116,6 +116,10 @@ export class Client extends EventEmitter implements IClientEvents {
             return undefined
         }
 
+        if (serviceNames.length > 1) {
+            throw new Error('Multi service usage detected! There is no default service!')
+        }
+
         return this.services[serviceNames[0]]
     }
 

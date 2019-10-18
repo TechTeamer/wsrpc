@@ -127,6 +127,10 @@ export class Server extends EventEmitter implements IServerEvents {
             return undefined
         }
 
+        if (serviceNames.length > 1) {
+            throw new Error('Multi service usage detected! There is no default service!')
+        }
+
         return this.services[serviceNames[0]]
     }
 
