@@ -342,7 +342,7 @@ describe('rpc with multiple services', () => {
             return { text: request.text }
         })
 
-        server.implement(testService1.methods['Upper'], (request: TextMessage) => {
+        server.implement(testService1, 'Upper', (request: TextMessage) => {
             return new Promise((resolve, reject) => {
                 const text = request.text.toUpperCase()
                 setTimeout(() => {
@@ -351,8 +351,8 @@ describe('rpc with multiple services', () => {
             })
         })
 
-        server.implement(testService2.methods['Echo'], async (request: TS2Message) => {
-            return { text: request.text }
+        server.implement(testService2.methods.Echo, async (request: TS2Message) => {
+            return { text: request.text + ' made by test2' }
         })
 
         server.on('error', (error: Error) => {
@@ -379,10 +379,41 @@ describe('rpc with multiple services', () => {
         await client.disconnect()
     })
 
-    it('should run echo rpc method', async function () {
+    it('should run TestService1.echo rpc method', async function () {
         // @ts-ignore
         const response = await client.services.TestService1.echo({ text: 'hello world' })
         assert.strictEqual(response.text, 'hello world')
+    })
+
+
+    it('should run TestService1.echo rpc method', async function () {
+        // @ts-ignore
+        const response = await client.services.TestService1.echo({ text: 'hello world' })
+        assert.strictEqual(response.text, 'hello world')
+    })
+
+    it('should run upper rpc method', async function () {
+        this.slow(150)
+        // @ts-ignore
+        const response = await client.services.TestService1.upper({ text: 'hello world' })
+        assert.strictEqual(response.text, 'HELLO WORLD')
+    })
+
+    it('should run TestService2.echo rpc method', async function () {
+        // @ts-ignore
+        const response = await client.services.TestService2.echo({ text: 'hello world' })
+        assert.strictEqual(response.text, 'hello world made by test2')
+    })
+
+    it('should throw when trying to use default service', async function () {
+        try {
+            // @ts-ignore
+            await client.service.echo({ text: 'hello world' })
+            assert(false, 'client should throw')
+        } catch (error) {
+            assert.strictEqual(error.name, 'Error')
+            assert.strictEqual(error.message, 'Multi service usage detected! There is no default service!')
+        }
     })
 
     it('should close server', async function () {
