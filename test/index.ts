@@ -8,9 +8,9 @@ import * as crypto from 'crypto'
 import { Server, Client } from '../src'
 import * as wsrpc_client from '../src/Client'
 import { waitForEvent } from '../src/utils'
-import { TextMessage } from '../protocol/test-1'
-import { TS2Message } from '../protocol/test-2'
-import { TextMessage as CollidingTextMessage } from '../protocol/test-collision'
+import { test1 as test1Proto }  from '../protocol/test-1'
+import { test2, test2 as test2Proto } from '../protocol/test-2'
+import { collision as collisionProto }  from '../protocol/test-collision'
 import * as rpcproto from '../protocol/rpc'
 import * as WebSocket from 'ws'
 
@@ -47,7 +47,7 @@ describe('rpc with a single service', () => {
     before(async () => {
         server = new Server(testService1, serverOpts)
 
-        server.implement('echo', async (request: TextMessage) => {
+        server.implement('echo', async (request: test1Proto.TextMessage) => {
             if (request.text === 'throw-string') {
                 throw 'You should always trow an error object'
             }
@@ -57,7 +57,7 @@ describe('rpc with a single service', () => {
             return { text: request.text }
         })
 
-        server.implement(testService1.methods['Upper'], (request: TextMessage) => {
+        server.implement(testService1.methods['Upper'], (request: test1Proto.TextMessage) => {
             return new Promise((resolve, reject) => {
                 const text = request.text.toUpperCase()
                 setTimeout(() => {
@@ -75,7 +75,7 @@ describe('rpc with a single service', () => {
         client = new Client(testAddr, testService1, {
             sendTimeout: 100,
             eventTypes: {
-                'text': TextMessage
+                'text': test1Proto.TextMessage
             }
         })
 
@@ -239,8 +239,8 @@ describe('rpc with a single service', () => {
 
     it('should emit typed event', function (done) {
         const text = 'I like les turlos'
-        server.broadcast('text', TextMessage.encode({ text }).finish())
-        client.once('event', (name: string, payload: TextMessage) => {
+        server.broadcast('text', test1Proto.TextMessage.encode({ text }).finish())
+        client.once('event', (name: string, payload: test1Proto.TextMessage) => {
             assert.strictEqual(name, 'text')
             assert.strictEqual(payload.text, text)
             done()
@@ -336,7 +336,7 @@ describe('rpc with multiple services', () => {
     before(async () => {
         server = new Server(testServices, serverOpts)
 
-        server.implement('testService1', 'echo', async (request: TextMessage) => {
+        server.implement('testService1', 'echo', async (request: test1Proto.TextMessage) => {
             if (request.text === 'throw-string') {
                 throw 'You should always trow an error object'
             }
@@ -346,7 +346,7 @@ describe('rpc with multiple services', () => {
             return { text: request.text }
         })
 
-        server.implement(testService1, 'Upper', (request: TextMessage) => {
+        server.implement(testService1, 'Upper', (request: test1Proto.TextMessage) => {
             return new Promise((resolve, reject) => {
                 const text = request.text.toUpperCase()
                 setTimeout(() => {
@@ -355,11 +355,11 @@ describe('rpc with multiple services', () => {
             })
         })
 
-        server.implement(testService2.methods.Echo, async (request: TS2Message) => {
+        server.implement(testService2.methods.Echo, async (request: test2Proto.TextMessage) => {
             return { text: request.text + ' made by test2' }
         })
 
-        server.implement(collisionTestService.methods.Echo, async (request: CollidingTextMessage) => {
+        server.implement(collisionTestService.methods.Echo, async (request: collisionProto.TextMessage) => {
             return { text: request.text, madeBy: 'collisionTestService' }
         })
 
@@ -372,7 +372,7 @@ describe('rpc with multiple services', () => {
         client = new Client(testAddr, testServices, {
             sendTimeout: 100,
             eventTypes: {
-                'text': TextMessage
+                'text': test1Proto.TextMessage
             }
         })
 
@@ -440,7 +440,7 @@ describe('rpc browser client', () => {
         (<any>wsrpc_client).WS = WebSocket
         process.title = 'browser'
         server = new Server([testService1], serverOpts)
-        server.implement(testService1, testService1.methods.Echo, async (request: TextMessage) => {
+        server.implement(testService1, testService1.methods.Echo, async (request: test1Proto.TextMessage) => {
             return { text: request.text }
         })
         client = new Client(testAddr, [testService1])

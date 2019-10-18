@@ -1,5 +1,7 @@
 syntax = "proto2";
 
+package collision;
+
 message Empty {}
 
 service CollisionTestService {

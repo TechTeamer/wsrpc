@@ -1,5 +1,7 @@
 syntax = "proto2";
 
+package test1;
+
 message Empty {}
 
 service TestService1 {
