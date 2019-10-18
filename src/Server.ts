@@ -121,12 +121,8 @@ export class Server extends EventEmitter implements IServerEvents {
     /**
      * Implement a RPC method defined in a protobuf service.
      */
-    public implement(method: protobuf.Method, handler: Handler): void;
-    public implement(method: string, handler: Handler): void;
-
-    public implement(service: protobuf.Service, method: protobuf.Method, handler: Handler): void;
-    public implement(service: protobuf.Service, method: string, handler: Handler): void;
-    public implement(service: string, method: string, handler: Handler): void;
+    public implement(method: protobuf.Method | string, handler: Handler): void;
+    public implement(service: protobuf.Service | string, method: protobuf.Method | string, handler: Handler): void;
 
     public implement(service: any, method: any, handler: any = null): void {
         if (!handler) {
