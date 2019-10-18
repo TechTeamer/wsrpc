@@ -122,6 +122,7 @@ export class Server extends EventEmitter implements IServerEvents {
      * Implement a RPC method defined in a protobuf service.
      */
     public implement(method: protobuf.Method, handler: Handler): void;
+    public implement(method: string, handler: Handler): void;
 
     public implement(service: protobuf.Service, method: protobuf.Method, handler: Handler): void;
     public implement(service: protobuf.Service, method: string, handler: Handler): void;
@@ -131,33 +132,30 @@ export class Server extends EventEmitter implements IServerEvents {
         if (!handler) {
             handler = method
             method = service
-            return this.implementMethod(method, handler)
+            service = this.resolveService(method)
+        }
+
+        return this.implementServiceMethod(service, method, handler)
+    }
+
+    private resolveService(method: string | protobuf.Method): string {
+        if (Object.keys(this.services).length === 0) {
+            throw new Error('There are no services!')
         }
 
         if (typeof method === 'string') {
-            return this.implementServiceMethod(service, method, handler)
+            if (Object.keys(this.services).length > 1) {
+                throw new Error('There is no default service! You have to specify the service at the method implementation')
+            }
+
+            return Object.keys(this.services)[0]
         }
 
-        return this.implementMethod(method, handler)
-    }
-
-    private implementMethod(method: protobuf.Method, handler: Handler): void {
         if (!method.parent || !method.parent.name) {
-            throw new Error('Method not related to any service')
+            throw new Error('Failed implement orphan method!')
         }
 
-        const serviceName = method.parent.name[0].toUpperCase() + method.parent.name.substring(1)
-        const service = this.services[serviceName]
-        if (!service) {
-            throw new Error('Invalid service')
-        }
-
-        if (service.methodsArray.indexOf(method) === -1) {
-            throw new Error('Invalid method')
-        }
-
-        method.resolve()
-        this.handlers[serviceName][method.name] = handler
+        return method.parent.name[0].toUpperCase() + method.parent.name.substring(1)
     }
 
     private implementServiceMethod(service: protobuf.Service | string, method: protobuf.Method | string, handler: Handler): void {
