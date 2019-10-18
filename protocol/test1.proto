@@ -2,7 +2,7 @@ syntax = "proto2";
 
 message Empty {}
 
-service TestService {
+service TestService1 {
     rpc Echo (TextMessage) returns (TextMessage) {}
     rpc Upper (TextMessage) returns (TextMessage) {}
     rpc NotImplemented (EmptyMessage) returns (EmptyMessage) {}
