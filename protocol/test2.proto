@@ -1,14 +1,9 @@
 syntax = "proto2";
 
 service TestService2 {
-    rpc Echo (TS2Request2) returns (TS2Response2) {}
+    rpc Echo (TS2Message) returns (TS2Message) {}
 }
 
-message TS2Request2 {
+message TS2Message {
     required string text = 1;
-}
-
-message TS2Response2 {
-    required string name = 1;
-    required uint32 delay = 2;
 }
