@@ -119,6 +119,18 @@ export class Server extends EventEmitter implements IServerEvents {
     }
 
     /**
+     * Get "default" service. (backwards compatibility)
+     */
+    get service(): protobuf.Service | undefined {
+        const serviceNames = Object.keys(this.services)
+        if(serviceNames.length === 0) {
+            return undefined
+        }
+
+        return this.services[serviceNames[0]]
+    }
+
+    /**
      * Implement a RPC method defined in a protobuf service.
      */
     public implement(method: protobuf.Method | string, handler: Handler): void

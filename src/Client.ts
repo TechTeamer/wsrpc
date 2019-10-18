@@ -108,6 +108,18 @@ export class Client extends EventEmitter implements IClientEvents {
     }
 
     /**
+     * Get "default" service. (backwards compatibility)
+     */
+    get service(): protobuf.rpc.Service | undefined {
+        const serviceNames = Object.keys(this.services)
+        if(serviceNames.length === 0) {
+            return undefined
+        }
+
+        return this.services[serviceNames[0]]
+    }
+
+    /**
      * Return `true` if the client is connected, otherwise `false`.
      */
     public isConnected(): boolean {
