@@ -80,11 +80,16 @@ export class Server extends EventEmitter implements IServerEvents {
     private pingInterval: number
 
     /**
-     * @param services The protocol buffer service class to serve.
+     * @param services The protocol buffer services to serve. {@link Server.services}
      * @param options Options, see {@link IServerOptions}.
      */
-    constructor(services: protobuf.Service[], options: IServerOptions = {}) {
+    constructor(services: protobuf.Service[] | protobuf.Service, options: IServerOptions = {}) {
         super()
+
+        if (!Array.isArray(services)) {
+            // Single service usage
+            services = [services]
+        }
 
         services.forEach((service) => {
             this.services[service.name] = service
@@ -114,11 +119,56 @@ export class Server extends EventEmitter implements IServerEvents {
     }
 
     /**
-     * Implement a RPC method defined in the protobuf service.
+     * Implement a RPC method defined in a protobuf service.
      */
-    public implement(serviceName: string, method: protobuf.Method | string, handler: Handler) {
-        serviceName = serviceName[0].toUpperCase() + serviceName.substring(1)
+    public implement(method: protobuf.Method, handler: Handler): void;
+
+    public implement(service: protobuf.Service, method: protobuf.Method, handler: Handler): void;
+    public implement(service: protobuf.Service, method: string, handler: Handler): void;
+    public implement(service: string, method: string, handler: Handler): void;
+
+    public implement(service: any, method: any, handler: any = null): void {
+        if (!handler) {
+            handler = method
+            method = service
+            return this.implementMethod(method, handler)
+        }
+
+        if (typeof method === 'string') {
+            return this.implementServiceMethod(service, method, handler)
+        }
+
+        return this.implementMethod(method, handler)
+    }
+
+    private implementMethod(method: protobuf.Method, handler: Handler): void {
+        if (!method.parent || !method.parent.name) {
+            throw new Error('Method not related to any service')
+        }
+
+        const serviceName = method.parent.name[0].toUpperCase() + method.parent.name.substring(1)
         const service = this.services[serviceName]
+        if (!service) {
+            throw new Error('Invalid service')
+        }
+
+        if (service.methodsArray.indexOf(method) === -1) {
+            throw new Error('Invalid method')
+        }
+
+        method.resolve()
+        this.handlers[serviceName][method.name] = handler
+    }
+
+    private implementServiceMethod(service: protobuf.Service | string, method: protobuf.Method | string, handler: Handler): void {
+        let serviceName
+        if (typeof service === 'string') {
+            serviceName = service[0].toUpperCase() + service.substring(1)
+        } else {
+            serviceName = service.name
+        }
+
+        service = this.services[serviceName]
         if (!service) {
             throw new Error('Invalid service')
         }
@@ -126,10 +176,9 @@ export class Server extends EventEmitter implements IServerEvents {
         if (typeof method === 'string') {
             const methodName = method[0].toUpperCase() + method.substring(1)
             method = service.methods[methodName]
-            if (!method) {
-                throw new Error('Invalid method')
-            }
-        } else if (service.methodsArray.indexOf(method) === -1) {
+        }
+
+        if (service.methodsArray.indexOf(method) === -1) {
             throw new Error('Invalid method')
         }
 

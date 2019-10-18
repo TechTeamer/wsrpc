@@ -78,15 +78,20 @@ export class Client extends EventEmitter implements IClientEvents {
 
     /**
      * @param address The address to the {@link Server}, eg `ws://example.com:8042`.
-     * @param services The protocol buffer service class to use, an instance of this
-     *                will be available as {@link Client.service}.
+     * @param services The protocol buffer services to use, instances of these
+     *                will be available in {@link Client.services}.
      * @param options Client options {@see IClientOptions}
      */
-    constructor(address: string, services: protobuf.Service[], options: IClientOptions = {}) {
+    constructor(address: string, services: protobuf.Service[] | protobuf.Service, options: IClientOptions = {}) {
         super()
 
         this.address = address
         this.options = options
+
+        if (!Array.isArray(services)) {
+            // Single service usage
+            services = [ services ]
+        }
 
         services.forEach((service) => {
             this.services[service.name] = service.create(this.rpcImpl)

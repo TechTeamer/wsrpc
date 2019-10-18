@@ -39,7 +39,7 @@ describe('rpc', () => {
         return {text: request.text}
     })
 
-    server.implement('TestService', testService.methods['Upper'], (request: TextMessage) => {
+    server.implement(testService.methods['Upper'], (request: TextMessage) => {
         return new Promise((resolve, reject) => {
             const text = request.text.toUpperCase()
             setTimeout(() => {
@@ -76,7 +76,7 @@ describe('rpc', () => {
         })
         assert.throws(() => {
             const orphanMethod = new protobuf.Method('Keke', 'foo', 'bar', 'baz')
-            server.implement('TestService', orphanMethod, async () => {
+            server.implement(orphanMethod, async () => {
                 return {}
             })
         })
@@ -85,14 +85,14 @@ describe('rpc', () => {
     it('should run echo rpc method', async function () {
         // @ts-ignore
         const response = await client.services.TestService.echo({text: 'hello world'})
-        assert.equal(response.text, 'hello world')
+        assert.strictEqual(response.text, 'hello world')
     })
 
     it('should run upper rpc method', async function () {
         this.slow(150)
         // @ts-ignore
         const response = await client.services.TestService.upper({text: 'hello world'})
-        assert.equal(response.text, 'HELLO WORLD')
+        assert.strictEqual(response.text, 'HELLO WORLD')
     })
 
     it('should handle thrown errors in implementation handler', async function () {
@@ -102,8 +102,8 @@ describe('rpc', () => {
             await client.services.TestService.echo({text: 'throw'})
             assert(false, 'should not be reached')
         } catch (error) {
-            assert.equal(error.name, 'RPCError')
-            assert.equal(error.message, 'Since you asked for it')
+            assert.strictEqual(error.name, 'RPCError')
+            assert.strictEqual(error.message, 'Since you asked for it')
         }
     })
 
@@ -113,8 +113,8 @@ describe('rpc', () => {
             await client.services.TestService.echo({text: 'throw-string'})
             assert(false, 'should not be reached')
         } catch (error) {
-            assert.equal(error.name, 'RPCError')
-            assert.equal(error.message, 'You should always trow an error object')
+            assert.strictEqual(error.name, 'RPCError')
+            assert.strictEqual(error.message, 'You should always trow an error object')
         }
     })
 
@@ -124,8 +124,8 @@ describe('rpc', () => {
             await client.services.TestService.notImplemented({})
             assert(false, 'should throw')
         } catch (error) {
-            assert.equal(error.name, 'RPCError')
-            assert.equal(error.message, 'Not implemented')
+            assert.strictEqual(error.name, 'RPCError')
+            assert.strictEqual(error.message, 'Not implemented')
         }
     })
 
@@ -141,7 +141,7 @@ describe('rpc', () => {
         }).finish()
         c.socket.send(msg)
         server.once('error', (error: any) => {
-            assert.equal(error.message, 'connection error: Invalid method')
+            assert.strictEqual(error.message, 'connection error: Invalid method')
             done()
         })
     })
@@ -158,7 +158,7 @@ describe('rpc', () => {
         }).finish()
         c.socket.send(msg)
         server.once('error', (error: any) => {
-            assert.equal(error.message, 'connection error: could not decode message: Invalid message type')
+            assert.strictEqual(error.message, 'connection error: could not decode message: Invalid message type')
             done()
         })
     })
@@ -169,30 +169,30 @@ describe('rpc', () => {
         const c = client as any
         c.socket.send(crypto.pseudoRandomBytes(512))
         server.once('error', (error: any) => {
-            assert.equal(error.jse_cause.name, 'RequestError')
-            assert.equal(error.jse_cause.jse_shortmsg, 'could not decode message')
+            assert.strictEqual(error.jse_cause.name, 'RequestError')
+            assert.strictEqual(error.jse_cause.jse_shortmsg, 'could not decode message')
             done()
         })
     })
 
     it('should handle garbled data from server', function (done) {
-        assert.equal(server.connections.length, 1)
+        assert.strictEqual(server.connections.length, 1)
         let conn = server.connections[0] as any
         conn.socket.send(crypto.pseudoRandomBytes(1024))
         client.once('error', (error: any) => {
-            assert.equal(error.name, 'MessageError')
-            assert.equal(error.jse_shortmsg, 'got invalid message')
+            assert.strictEqual(error.name, 'MessageError')
+            assert.strictEqual(error.jse_shortmsg, 'got invalid message')
             done()
         })
     })
 
     it('should emit event', function (done) {
         planError = false
-        assert.equal(server.connections.length, 1)
+        assert.strictEqual(server.connections.length, 1)
         const data = crypto.pseudoRandomBytes(42)
         server.connections[0].send('marvin', data)
         client.once('event', (name: string, payload?: Uint8Array) => {
-            assert.equal(name, 'marvin')
+            assert.strictEqual(name, 'marvin')
             assert.deepEqual(payload, data)
             done()
         })
@@ -202,8 +202,8 @@ describe('rpc', () => {
         const text = 'I like les turlos'
         server.broadcast('text', TextMessage.encode({text}).finish())
         client.once('event', (name: string, payload: TextMessage) => {
-            assert.equal(name, 'text')
-            assert.equal(payload.text, text)
+            assert.strictEqual(name, 'text')
+            assert.strictEqual(payload.text, text)
             done()
         })
     })
@@ -212,8 +212,8 @@ describe('rpc', () => {
         planError = true
         server.broadcast('text', crypto.pseudoRandomBytes(42))
         client.once('error', (error: any) => {
-            assert.equal(error.name, 'EventError')
-            assert.equal(error.jse_shortmsg, 'could not decode event payload')
+            assert.strictEqual(error.name, 'EventError')
+            assert.strictEqual(error.jse_shortmsg, 'could not decode event payload')
             done()
         })
     })
@@ -228,7 +228,7 @@ describe('rpc', () => {
             await response
             assert(false, 'should throw')
         } catch (error) {
-            assert.equal(error.name, 'TimeoutError')
+            assert.strictEqual(error.name, 'TimeoutError')
         }
     })
 
@@ -244,7 +244,7 @@ describe('rpc', () => {
         const c = client as any
         c.sendTimeout = 1000
 
-        assert.equal(server.connections.length, 1)
+        assert.strictEqual(server.connections.length, 1)
         server.connections[0].close()
         await waitForEvent(client, 'close')
 
@@ -277,7 +277,7 @@ describe('rpc', () => {
             await client.services.TestService.echo({text: 'boom'})
             assert(false, 'should not be reached')
         } catch (error) {
-            assert.equal(error.message, 'boom')
+            assert.strictEqual(error.message, 'boom')
         }
     })
 
@@ -298,7 +298,7 @@ describe('rpc browser client', () => {
         (<any>wsrpc_client).WS = WebSocket
         process.title = 'browser'
         server = new Server([testService], serverOpts)
-        server.implement('TestService', 'echo', async (request: TextMessage) => {
+        server.implement(testService, testService.methods.Echo, async (request: TextMessage) => {
             return {text: request.text}
         })
         client = new Client(testAddr, [testService])
@@ -312,6 +312,6 @@ describe('rpc browser client', () => {
     it('should work', async function () {
         // @ts-ignore
         const response = await client.services.TestService.echo({text: 'foo'})
-        assert.equal(response.text, 'foo')
+        assert.strictEqual(response.text, 'foo')
     })
 })
