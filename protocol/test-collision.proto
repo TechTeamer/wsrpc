@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+message Empty {}
+
+service CollisionTestService {
+    rpc Echo (TextMessage) returns (TextMessage) {}
+    rpc Upper (TextMessage) returns (TextMessage) {}
+    rpc NotImplemented (EmptyMessage) returns (EmptyMessage) {}
+}
+
+message EmptyMessage {}
+
+message TextMessage {
+    required string text = 1;
+    optional string madeBy = 2;
+}
+
+message EventRequest {
+    required string name = 1;
+    required uint32 delay = 2;
+}
+

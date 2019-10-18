@@ -8,24 +8,28 @@ import * as crypto from 'crypto'
 import { Server, Client } from '../src'
 import * as wsrpc_client from '../src/Client'
 import { waitForEvent } from '../src/utils'
-import { TextMessage } from '../protocol/test1'
-import { TS2Message } from '../protocol/test2'
+import { TextMessage } from '../protocol/test-1'
+import { TS2Message } from '../protocol/test-2'
+import { TextMessage as CollidingTextMessage } from '../protocol/test-collision'
 import * as rpcproto from '../protocol/rpc'
 import * as WebSocket from 'ws'
 
 const testPort = 1234
 const testAddr = `ws://localhost:${testPort}`
 const testProto = protobuf.loadSync([
-    path.join(__dirname, './../protocol/test1.proto'),
-    path.join(__dirname, './../protocol/test2.proto')
+    path.join(__dirname, './../protocol/test-1.proto'),
+    path.join(__dirname, './../protocol/test-2.proto')
 ])
+const testProtoCollision = protobuf.loadSync(path.join(__dirname, './../protocol/test-collision.proto'))
 
 const testService1: protobuf.Service = testProto.lookupService('TestService1')
 const testService2: protobuf.Service = testProto.lookupService('TestService2')
+const collisionTestService: protobuf.Service = testProtoCollision.lookupService('CollisionTestService')
 
 const testServices = [
     testService1,
-    testService2
+    testService2,
+    collisionTestService
 ]
 
 const serverOpts = {
@@ -355,6 +359,10 @@ describe('rpc with multiple services', () => {
             return { text: request.text + ' made by test2' }
         })
 
+        server.implement(collisionTestService.methods.Echo, async (request: CollidingTextMessage) => {
+            return { text: request.text, madeBy: 'collisionTestService' }
+        })
+
         server.on('error', (error: Error) => {
             if (!planError) {
                 console.warn('unplanned server error', error.message)
@@ -385,14 +393,13 @@ describe('rpc with multiple services', () => {
         assert.strictEqual(response.text, 'hello world')
     })
 
-
     it('should run TestService1.echo rpc method', async function () {
         // @ts-ignore
         const response = await client.services.TestService1.echo({ text: 'hello world' })
         assert.strictEqual(response.text, 'hello world')
     })
 
-    it('should run upper rpc method', async function () {
+    it('should run TestService1.upper rpc method', async function () {
         this.slow(150)
         // @ts-ignore
         const response = await client.services.TestService1.upper({ text: 'hello world' })
@@ -403,6 +410,13 @@ describe('rpc with multiple services', () => {
         // @ts-ignore
         const response = await client.services.TestService2.echo({ text: 'hello world' })
         assert.strictEqual(response.text, 'hello world made by test2')
+    })
+
+    it('should run CollisionTestService.echo rpc method', async function () {
+        // @ts-ignore
+        const response = await client.services.CollisionTestService.echo({ text: 'hello world' })
+        assert.strictEqual(response.text, 'hello world')
+        assert.strictEqual(response.madeBy, 'collisionTestService')
     })
 
     it('should throw when trying to use default service', async function () {
