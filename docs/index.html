@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>wsrpc</title>
+	<title>@techteamer/wsrpc</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
@@ -22,7 +22,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="index.html" class="title">wsrpc</a>
+					<a href="index.html" class="title">@techteamer/wsrpc</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -56,7 +56,7 @@
 					<a href="globals.html">Globals</a>
 				</li>
 			</ul>
-			<h1> wsrpc</h1>
+			<h1> @techteamer/wsrpc</h1>
 		</div>
 	</div>
 </header>
@@ -64,15 +64,22 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
-				<h1 id="wsrpc-build-status-coverage-status-package-version-license"><a href="https://github.com/jnordberg/wsrpc">wsrpc</a> <a href="https://travis-ci.org/jnordberg/wsrpc"><img src="https://img.shields.io/travis/jnordberg/wsrpc.svg?style=flat-square" alt="Build Status"></a> <a href="https://coveralls.io/github/jnordberg/wsrpc?branch=master"><img src="https://img.shields.io/coveralls/jnordberg/wsrpc.svg?style=flat-square" alt="Coverage Status"></a> <a href="https://www.npmjs.com/package/wsrpc"><img src="https://img.shields.io/npm/v/wsrpc.svg?style=flat-square" alt="Package Version"></a> <img src="https://img.shields.io/npm/l/wsrpc.svg?style=flat-square" alt="License"></h1>
-				<p>node.js/browser protobuf rpc over binary websockets.</p>
+				<h1 id="wsrpc"><a href="https://github.com/TechTeamer/wsrpc">wsrpc</a></h1>
+				<p>Original package: <a href="https://github.com/jnordberg/wsrpc">wsrpc</a></p>
+				<p>Node.js/browser protobuf rpc over binary websockets.</p>
+				<h4 id="key-features-">Key features:</h4>
 				<ul>
-					<li><strong><a href="https://johan-nordberg.com/wspainter">Demo</a></strong> (<a href="https://github.com/jnordberg/wsrpc/tree/master/examples/painter">source</a>)</li>
-					<li><a href="https://jnordberg.github.io/wsrpc/">Documentation</a></li>
-					<li><a href="https://github.com/jnordberg/wsrpc/issues">Issues</a></li>
+					<li>Send binary data over websockets</li>
+					<li>RPC</li>
+					<li>Broadcasting</li>
+					<li>Customizable reconnect logic on client side</li>
+					<li>Supports multiple protobuf services on same port</li>
 				</ul>
-				<hr>
-				<h2 id="minimal-example">Minimal example</h2>
+				<h2 id="installation">Installation</h2>
+				<pre><code class="lang-bash">yarn add @techteamer/wsrpc
+</code></pre>
+				<h2 id="usage-examples">Usage examples</h2>
+				<h3 id="single-service-usage">Single service usage</h3>
 				<p>my-service.proto</p>
 				<pre><code class="lang-protobuf"><span class="hljs-class"><span class="hljs-keyword">service</span> <span class="hljs-title">MyService</span> </span>{
     <span class="hljs-function"><span class="hljs-keyword">rpc</span> SayHello (HelloRequest) <span class="hljs-keyword">returns</span> (HelloResponse) {}
@@ -87,22 +94,19 @@ message HelloRequest {
 }
 </code></pre>
 				<p>server.js</p>
-				<pre><code class="lang-typescript"><span class="hljs-keyword">const</span> wsrpc = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wsrpc'</span>)
+				<pre><code class="lang-typescript"><span class="hljs-keyword">const</span> wsrpc = <span class="hljs-built_in">require</span>(<span class="hljs-string">'@techteamer/wsrpc'</span>)
 <span class="hljs-keyword">const</span> protobuf = <span class="hljs-built_in">require</span>(<span class="hljs-string">'protobufjs'</span>)
 
 <span class="hljs-keyword">const</span> proto = protobuf.loadSync(<span class="hljs-string">'my-service.proto'</span>)
 
-<span class="hljs-keyword">const</span> server = <span class="hljs-keyword">new</span> wsrpc.Server({
-    port: <span class="hljs-number">4242</span>,
-    service: proto.lookupService(<span class="hljs-string">'MyService'</span>)
-})
+<span class="hljs-keyword">const</span> server = <span class="hljs-keyword">new</span> wsrpc.Server(proto.lookupService(<span class="hljs-string">'MyService'</span>), { port: <span class="hljs-number">4242</span> })
 
 server.implement(<span class="hljs-string">'sayHello'</span>, <span class="hljs-keyword">async</span> (request) =&gt; {
     <span class="hljs-keyword">return</span> {text: <span class="hljs-string">`Hello <span class="hljs-subst">${ request.name }</span>!`</span>}
 })
 </code></pre>
 				<p>client.js</p>
-				<pre><code class="lang-typescript"><span class="hljs-keyword">const</span> wsrpc = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wsrpc'</span>)
+				<pre><code class="lang-typescript"><span class="hljs-keyword">const</span> wsrpc = <span class="hljs-built_in">require</span>(<span class="hljs-string">'@techteamer/wsrpc'</span>)
 <span class="hljs-keyword">const</span> protobuf = <span class="hljs-built_in">require</span>(<span class="hljs-string">'protobufjs'</span>)
 
 <span class="hljs-keyword">const</span> proto = protobuf.loadSync(<span class="hljs-string">'my-service.proto'</span>)
@@ -111,6 +115,107 @@ server.implement(<span class="hljs-string">'sayHello'</span>, <span class="hljs-
 
 <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> client.service.sayHello({name: <span class="hljs-string">'world'</span>})
 <span class="hljs-built_in">console</span>.log(response) <span class="hljs-comment">// Hello world!</span>
+</code></pre>
+				<h3 id="multi-service-usage">Multi service usage</h3>
+				<p>You can use a single server to implement multiple rpc services.
+				The services can be in a single or multiple separate <code>.proto</code> files.</p>
+				<blockquote>
+					<p>WARNING: Service names must be unique!</p>
+				</blockquote>
+				<blockquote>
+					<p>NOTE: The same <code>message</code> or <code>rpc</code> method names can be used in multiple services.
+					To avoid collisions between them across different services you should use a unique <code>package</code> identifier in every <code>.proto</code> file.  </p>
+				</blockquote>
+				<p>service1.proto</p>
+				<pre><code class="lang-protobuf"><span class="hljs-keyword">package</span> service1
+
+<span class="hljs-class"><span class="hljs-keyword">service</span> <span class="hljs-title">Service1</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">rpc</span> SayHello (HelloRequest) <span class="hljs-keyword">returns</span> (HelloResponse) {}
+}
+
+message HelloRequest {
+    required string name = 1</span>;
+}
+
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">HelloResponse</span> </span>{
+    <span class="hljs-keyword">required</span> <span class="hljs-built_in">string</span> text = <span class="hljs-number">1</span>;
+}
+</code></pre>
+				<p>service2.proto</p>
+				<pre><code class="lang-protobuf"><span class="hljs-keyword">package</span> service2
+
+<span class="hljs-class"><span class="hljs-keyword">service</span> <span class="hljs-title">Service2</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">rpc</span> SayHello (HelloRequest) <span class="hljs-keyword">returns</span> (HelloResponse) {}
+    <span class="hljs-keyword">rpc</span> SayHi (HelloRequest) <span class="hljs-keyword">returns</span> (HelloResponse) {}
+}
+
+message HelloRequest {
+    required string to = 1</span>;
+}
+
+<span class="hljs-class"><span class="hljs-keyword">message</span> <span class="hljs-title">HelloResponse</span> </span>{
+    <span class="hljs-keyword">required</span> <span class="hljs-built_in">string</span> text = <span class="hljs-number">1</span>;
+    <span class="hljs-keyword">required</span> <span class="hljs-built_in">string</span> from = <span class="hljs-number">2</span>;
+    <span class="hljs-keyword">required</span> <span class="hljs-built_in">string</span> to = <span class="hljs-number">3</span>;
+}
+</code></pre>
+				<p>server.js</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">const</span> wsrpc = <span class="hljs-built_in">require</span>(<span class="hljs-string">'@techteamer/wsrpc'</span>)
+<span class="hljs-keyword">const</span> protobuf = <span class="hljs-built_in">require</span>(<span class="hljs-string">'protobufjs'</span>)
+
+<span class="hljs-keyword">const</span> proto = protobuf.loadSync([<span class="hljs-string">'service1.proto'</span>, <span class="hljs-string">'service2.proto'</span>])
+
+<span class="hljs-keyword">const</span> service1 = proto.lookupService(<span class="hljs-string">'Service1'</span>)
+<span class="hljs-keyword">const</span> service2 = proto.lookupService(<span class="hljs-string">'Service2'</span>)
+
+<span class="hljs-keyword">const</span> services = [
+    service1,
+    service2
+]
+
+<span class="hljs-keyword">const</span> server = <span class="hljs-keyword">new</span> wsrpc.Server(services, { port: <span class="hljs-number">4242</span> })
+
+<span class="hljs-comment">// If the method is a string you have to specify the service!</span>
+server.implement(<span class="hljs-string">'Service1'</span>, <span class="hljs-string">'sayHello'</span>, <span class="hljs-keyword">async</span> (request) =&gt; {
+    <span class="hljs-keyword">return</span> {text: <span class="hljs-string">`Hello <span class="hljs-subst">${ request.name }</span> from Service1!`</span>}
+})
+
+server.implement(service2, <span class="hljs-string">'sayHello'</span>, <span class="hljs-keyword">async</span> (request) =&gt; {
+    <span class="hljs-keyword">return</span> {text: <span class="hljs-string">`Hello <span class="hljs-subst">${ request.to }</span> from Service2!`</span>}
+})
+
+<span class="hljs-comment">// If you pass in a Method instance the service will be resolved automatically</span>
+server.implement(service2.methods.SayHi, <span class="hljs-keyword">async</span> (request) =&gt; {
+    <span class="hljs-keyword">return</span> {text: <span class="hljs-string">`Hi <span class="hljs-subst">${ request.to }</span>!`</span>, <span class="hljs-keyword">from</span>: <span class="hljs-string">'Service2'</span>, to: request.name}
+})
+</code></pre>
+				<p>client.js</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">const</span> wsrpc = <span class="hljs-built_in">require</span>(<span class="hljs-string">'@techteamer/wsrpc'</span>)
+<span class="hljs-keyword">const</span> protobuf = <span class="hljs-built_in">require</span>(<span class="hljs-string">'protobufjs'</span>)
+
+<span class="hljs-keyword">const</span> proto = protobuf.loadSync([<span class="hljs-string">'service1.proto'</span>, <span class="hljs-string">'service2.proto'</span>])
+
+<span class="hljs-keyword">const</span> service1 = proto.lookupService(<span class="hljs-string">'Service1'</span>)
+<span class="hljs-keyword">const</span> service2 = proto.lookupService(<span class="hljs-string">'Service2'</span>)
+
+<span class="hljs-keyword">const</span> services = [
+    service1,
+    service2
+]
+
+<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> wsrpc.Client(<span class="hljs-string">'ws://localhost:4242'</span>, services)
+<span class="hljs-keyword">let</span> response
+
+response = <span class="hljs-keyword">await</span> client.services.Service1.sayHello({name: <span class="hljs-string">'world1'</span>})
+<span class="hljs-built_in">console</span>.log(response.text) <span class="hljs-comment">// Hello world1 from Service1!</span>
+
+response = <span class="hljs-keyword">await</span> client.services.Service2.sayHello({to: <span class="hljs-string">'world2'</span>})
+<span class="hljs-built_in">console</span>.log(response.text) <span class="hljs-comment">// Hello world2 from Service2!</span>
+
+response = <span class="hljs-keyword">await</span> client.services.Service2.sayHi({to: <span class="hljs-string">'world3'</span>})
+<span class="hljs-built_in">console</span>.log(response.text) <span class="hljs-comment">// Hi world3!</span>
+<span class="hljs-built_in">console</span>.log(response.from) <span class="hljs-comment">// Service2</span>
+<span class="hljs-built_in">console</span>.log(response.to) <span class="hljs-comment">// world3</span>
 </code></pre>
 			</div>
 		</div>
@@ -124,7 +229,7 @@ server.implement(<span class="hljs-string">'sayHello'</span>, <span class="hljs-
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-has-type-parameter">
+					<li class=" tsd-kind-class">
 						<a href="classes/client.html" class="tsd-kind-icon">Client</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -142,7 +247,7 @@ server.implement(<span class="hljs-string">'sayHello'</span>, <span class="hljs-
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/iprotobuftype.html" class="tsd-kind-icon">IProtobuf<wbr>Type</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-not-exported">
+					<li class=" tsd-kind-interface">
 						<a href="interfaces/irpcmessage.html" class="tsd-kind-icon">IRPCMessage</a>
 					</li>
 					<li class=" tsd-kind-interface">
@@ -163,7 +268,7 @@ server.implement(<span class="hljs-string">'sayHello'</span>, <span class="hljs-
 					<li class=" tsd-kind-variable">
 						<a href="globals.html#version" class="tsd-kind-icon">version</a>
 					</li>
-					<li class=" tsd-kind-function tsd-is-not-exported">
+					<li class=" tsd-kind-function">
 						<a href="globals.html#defaultbackoff" class="tsd-kind-icon">default<wbr>Backoff</a>
 					</li>
 					<li class=" tsd-kind-function tsd-has-type-parameter">

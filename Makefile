@@ -50,8 +50,8 @@ node_modules:
 .PHONY: docs
 docs: node_modules
 	typedoc --gitRevision master --target ES6 --mode file --out docs src
-	find docs -name "*.html" | xargs sed -i '' 's~$(shell pwd)~.~g'
-	echo "Served at <https://jnordberg.github.io/wsrpc/>" > docs/README.md
+	find docs -name "*.html" | xargs sed 's~$(shell pwd)~.~g' -i
+	echo "Served at <https://techteamer.github.io/wsrpc/>" > docs/README.md
 
 .PHONY: clean
 clean:
