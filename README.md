@@ -1,15 +1,22 @@
+# [wsrpc](https://github.com/TechTeamer/wsrpc)
+Original package: [wsrpc](https://github.com/jnordberg/wsrpc)
 
-# [wsrpc](https://github.com/jnordberg/wsrpc) [![Build Status](https://img.shields.io/travis/jnordberg/wsrpc.svg?style=flat-square)](https://travis-ci.org/jnordberg/wsrpc) [![Coverage Status](https://img.shields.io/coveralls/jnordberg/wsrpc.svg?style=flat-square)](https://coveralls.io/github/jnordberg/wsrpc?branch=master) [![Package Version](https://img.shields.io/npm/v/wsrpc.svg?style=flat-square)](https://www.npmjs.com/package/wsrpc) ![License](https://img.shields.io/npm/l/wsrpc.svg?style=flat-square)
+Node.js/browser protobuf rpc over binary websockets.
 
-node.js/browser protobuf rpc over binary websockets.
+#### Key features:
 
-* **[Demo](https://johan-nordberg.com/wspainter)** ([source](https://github.com/jnordberg/wsrpc/tree/master/examples/painter))
-* [Documentation](https://jnordberg.github.io/wsrpc/)
-* [Issues](https://github.com/jnordberg/wsrpc/issues)
+- Send binary data over websockets
+- RPC
+- Broadcasting
+- Customizable reconnect logic on client side
+- Supports multiple protobuf services on same port
 
----
+## Installation
+```bash
+yarn add @techteamer/wsrpc
+```
 
-## Examples
+## Usage examples
 
 ### Single service usage
 
@@ -30,7 +37,7 @@ message HelloResponse {
 
 server.js
 ```typescript
-const wsrpc = require('wsrpc')
+const wsrpc = require('@techteamer/wsrpc')
 const protobuf = require('protobufjs')
 
 const proto = protobuf.loadSync('my-service.proto')
@@ -44,7 +51,7 @@ server.implement('sayHello', async (request) => {
 
 client.js
 ```typescript
-const wsrpc = require('wsrpc')
+const wsrpc = require('@techteamer/wsrpc')
 const protobuf = require('protobufjs')
 
 const proto = protobuf.loadSync('my-service.proto')
@@ -105,7 +112,7 @@ message HelloResponse {
 
 server.js
 ```typescript
-const wsrpc = require('wsrpc')
+const wsrpc = require('@techteamer/wsrpc')
 const protobuf = require('protobufjs')
 
 const proto = protobuf.loadSync(['service1.proto', 'service2.proto'])
@@ -137,7 +144,7 @@ server.implement(service2.methods.SayHi, async (request) => {
 
 client.js
 ```typescript
-const wsrpc = require('wsrpc')
+const wsrpc = require('@techteamer/wsrpc')
 const protobuf = require('protobufjs')
 
 const proto = protobuf.loadSync(['service1.proto', 'service2.proto'])

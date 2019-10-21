@@ -1,0 +1,7 @@
+.idea
+test
+.travis.yml
+yarn.lock
+tslint.json
+.nyc_output
+coverage

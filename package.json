@@ -1,8 +1,8 @@
 {
-  "name": "wsrpc",
-  "version": "1.3.0",
+  "name": "@techteamer/wsrpc",
+  "version": "2.0.0",
   "description": "node.js/browser protobuf rpc over binary websockets",
-  "author": "Johan Nordberg",
+  "author": "TechTeamer",
   "license": "BSD-3-Clause",
   "main": "./lib6/index",
   "typings": "./lib6/index",
@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/jnordberg/wsrpc"
+    "url": "https://github.com/TechTeamer/wsrpc"
   },
   "scripts": {
     "prepublishOnly": "make lint && make test && make docs && make lib",
@@ -34,6 +34,10 @@
     "websockets",
     "ws"
   ],
+  "bugs": {
+    "url": "https://github.com/TechTeamer/wsrpc/issues"
+  },
+  "homepage": "https://github.com/TechTeamer/wsrpc#readme",
   "dependencies": {
     "protobufjs": "^6.8.3",
     "uws": "10.148.1",
