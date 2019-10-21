@@ -2,7 +2,7 @@
   "name": "@techteamer/wsrpc",
   "version": "2.0.0",
   "description": "node.js/browser protobuf rpc over binary websockets",
-  "author": "TechTeamer",
+  "author": "Johan Nordberg",
   "license": "BSD-3-Clause",
   "main": "./lib6/index",
   "typings": "./lib6/index",
