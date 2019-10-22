@@ -209,8 +209,9 @@ export class Server extends EventEmitter implements IServerEvents {
         }
 
         if (typeof method === 'string') {
-            const methodName = method[0].toUpperCase() + method.substring(1)
-            method = service.methods[methodName]
+            // Don't force this uppercase methods!
+            // const methodName = method[0].toUpperCase() + method.substring(1)
+            method = service.methods[method]
         }
 
         if (service.methodsArray.indexOf(method) === -1) {

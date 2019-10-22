@@ -47,7 +47,7 @@ describe('rpc with a single service', () => {
     before(async () => {
         server = new Server(testService1, serverOpts)
 
-        server.implement('echo', async (request: test1Proto.TextMessage) => {
+        server.implement('Echo', async (request: test1Proto.TextMessage) => {
             if (request.text === 'throw-string') {
                 throw 'You should always trow an error object'
             }
@@ -64,6 +64,10 @@ describe('rpc with a single service', () => {
                     resolve({ text })
                 }, 50)
             })
+        })
+
+        server.implement('lowerCaseMethod', async (request: test1Proto.EmptyMessage) => {
+            return {}
         })
 
         server.on('error', (error: Error) => {
@@ -336,7 +340,7 @@ describe('rpc with multiple services', () => {
     before(async () => {
         server = new Server(testServices, serverOpts)
 
-        server.implement('testService1', 'echo', async (request: test1Proto.TextMessage) => {
+        server.implement('testService1', 'Echo', async (request: test1Proto.TextMessage) => {
             if (request.text === 'throw-string') {
                 throw 'You should always trow an error object'
             }
