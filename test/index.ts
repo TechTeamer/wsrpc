@@ -67,7 +67,7 @@ describe('rpc with a single service', () => {
         })
 
         server.implement('lowerCaseMethod', async (request: test1Proto.EmptyMessage) => {
-            return {}
+            return { text: 'lower methods case work' }
         })
 
         server.on('error', (error: Error) => {
@@ -119,6 +119,12 @@ describe('rpc with a single service', () => {
         // @ts-ignore
         const response = await client.service.upper({ text: 'hello world' })
         assert.strictEqual(response.text, 'HELLO WORLD')
+    })
+
+    it('should run lowerCaseMethod rpc method', async function () {
+        // @ts-ignore
+        const response = await client.service.lowerCaseMethod({})
+        assert.strictEqual(response.text, 'lower methods case work')
     })
 
     it('should handle thrown errors in implementation handler', async function () {

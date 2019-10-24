@@ -8,7 +8,7 @@ service TestService1 {
     rpc Echo (TextMessage) returns (TextMessage) {}
     rpc Upper (TextMessage) returns (TextMessage) {}
     rpc NotImplemented (EmptyMessage) returns (EmptyMessage) {}
-    rpc lowerCaseMethod (EmptyMessage) returns (EmptyMessage) {}
+    rpc lowerCaseMethod (EmptyMessage) returns (TextMessage) {}
 }
 
 message EmptyMessage {}

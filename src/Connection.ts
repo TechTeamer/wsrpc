@@ -69,7 +69,7 @@ export class Connection extends EventEmitter {
 
     private async requestHandler(request: RPC.Request): Promise<RPC.Response> {
         const serviceName = request.service[0].toUpperCase() + request.service.substring(1)
-        const methodName = request.method[0].toUpperCase() + request.method.substring(1)
+        const methodName = request.method
 
         const service = this.server.services[serviceName]
         const serviceHandlers = this.server.handlers[serviceName]
