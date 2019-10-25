@@ -72,7 +72,7 @@ describe('rpc with a single service', () => {
 
         server.on('error', (error: Error) => {
             if (!planError) {
-                console.warn('unplanned server error', error.message)
+                console.warn('unplanned server error', error)
             }
         })
 
@@ -85,7 +85,7 @@ describe('rpc with a single service', () => {
 
         client.on('error', (error: Error) => {
             if (!planError) {
-                console.warn('unplanned client error', error.message)
+                console.warn('unplanned client error', error)
             }
         })
     })
@@ -268,7 +268,7 @@ describe('rpc with a single service', () => {
     })
 
     it('should timeout messages', async function () {
-        planError = false
+        planError = true
         this.slow(300)
         // @ts-ignore
         const response = client.service.echo({ text: 'foo' })
@@ -375,7 +375,7 @@ describe('rpc with multiple services', () => {
 
         server.on('error', (error: Error) => {
             if (!planError) {
-                console.warn('unplanned server error', error.message)
+                console.warn('unplanned server error', error)
             }
         })
 
@@ -388,7 +388,7 @@ describe('rpc with multiple services', () => {
 
         client.on('error', (error: Error) => {
             if (!planError) {
-                console.warn('unplanned client error', error.message)
+                console.warn('unplanned client error', error)
             }
         })
     })

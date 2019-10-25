@@ -1,13 +1,13 @@
-import * as WebSocket from 'uws'
+import * as WebSocket from 'ws'
 import { IProtobufType } from './IProtobufType'
 
 /**
  * RPC Client options
  * ------------------
- * *Note* - The options inherited from `WebSocket.IClientOptions` are only
+ * *Note* - The options inherited from `WebSocket.ClientOptions` are only
  * valid when running in node.js, they have no effect in the browser.
  */
-export interface IClientOptions extends WebSocket.IClientOptions {
+export interface IClientOptions extends WebSocket.ClientOptions {
     /**
      * Event names to protobuf types, any event assigned a type will have
      * its payload decoded before the event is posted.

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
-import * as WebSocket from 'uws'
 import { VError } from 'verror'
+import * as WebSocket from 'ws'
 import * as RPC from '../protocol/rpc'
 
 import { Message } from './type/Message'
@@ -125,7 +125,15 @@ export class Connection extends EventEmitter {
         }
         this.requestHandler(request).then((response) => {
             const message = RPC.Message.encode({ type: RPC.Message.Type.RESPONSE, response }).finish()
-            this.socket.send(message)
+            return new Promise<void>((resolve, reject) => {
+                this.socket.send(message, (error) => {
+                    if (error) {
+                        reject(error)
+                    } else {
+                        resolve()
+                    }
+                })
+            })
         }).catch((error: Error) => {
             const message = RPC.Message.encode({
                 response: {
@@ -135,7 +143,9 @@ export class Connection extends EventEmitter {
                 },
                 type: RPC.Message.Type.RESPONSE,
             }).finish()
-            this.socket.send(message)
+            if (this.socket.readyState === WebSocket.OPEN) {
+                this.socket.send(message)
+            }
             setImmediate(() => {
                 // this avoids the promise swallowing the error thrown
                 // by emit 'error' when no listeners are present
