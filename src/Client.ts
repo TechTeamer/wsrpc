@@ -35,16 +35,15 @@
 
 import { EventEmitter } from 'events'
 import * as protobuf from 'protobufjs'
-import * as WebSocket from 'uws'
 import { VError } from 'verror'
+import * as WebSocket from 'ws'
 import * as RPC from '../protocol/rpc'
-import { waitForEvent } from './utils'
+import { defaultBackoff, waitForEvent } from './utils'
 
 import { IClientEvents } from './interface/IClientEvents'
 import { IClientOptions } from './interface/IClientOptions'
 import { IProtobufType } from './interface/IProtobufType'
 import { IRPCMessage } from './interface/IRPCMessage'
-import { defaultBackoff } from './utils'
 
 export let WS = WebSocket
 
@@ -194,7 +193,7 @@ export class Client extends EventEmitter implements IClientEvents {
         }
     }
 
-    private errorHandler = (error: Error) => {
+    private errorHandler = (error: any) => {
         this.emit('error', error)
     }
 

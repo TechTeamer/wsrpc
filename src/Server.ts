@@ -35,8 +35,8 @@
 
 import { EventEmitter } from 'events'
 import * as protobuf from 'protobufjs/minimal'
-import * as WebSocket from 'uws'
 import { VError } from 'verror'
+import * as WebSocket from 'ws'
 
 import { IServerEvents } from './interface/IServerEvents'
 import { IServerOptions } from './interface/IServerOptions'
