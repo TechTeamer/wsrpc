@@ -3,7 +3,7 @@ node_js:
   - "8"
   - "10"
 after_success:
-  - "cat ./coverage/lcov.info | ./node_modules/.bin/coveralls"
+  - "make coverage"
 env:
   - CXX=g++-4.8
 addons:
