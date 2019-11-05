@@ -1,3 +1,13 @@
+## 3.0.1
+
+- Fix `client.js` file resolution in `package.json`
+
+## 2.1.0
+
+- Replace lib with [jnordberg/wsrpc#8](https://github.com/jnordberg/wsrpc/pull/8)
+- 100% statement coverage.
+- Changes in `Makefile` and `travis.yml`
+
 ## 2.1.0
 
 - Rebase onto `jnordberg/wsrpc`@`1.4.0`
