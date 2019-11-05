@@ -14,7 +14,7 @@ proto: $(PROTO_DEFS)
 
 .PHONY: coverage
 coverage: node_modules
-	nyc -r html -r text -e .ts -i ts-node/register -n "src/*.ts" mocha --reporter nyan --require ts-node/register test/*.ts
+	nyc -r html -r text -e .ts -i ts-node/register -n "src/*.ts" --require ts-node/register test/*.ts
 
 .PHONY: test
 test: node_modules $(PROTO_DEFS)
@@ -23,7 +23,7 @@ test: node_modules $(PROTO_DEFS)
 .PHONY: ci-test
 ci-test: node_modules $(PROTO_DEFS)
 	tslint -p tsconfig.json -c tslint.json
-	nyc -r lcov -e .ts -i ts-node/register -n "src/*.ts" mocha --reporter tap --require ts-node/register test/*.ts
+	nyc -e .ts -i ts-node/register -n "src/*.ts" mocha test/*.ts
 
 .PHONY: lint
 lint: node_modules
