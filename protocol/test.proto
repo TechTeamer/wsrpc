@@ -1,10 +1,8 @@
 syntax = "proto2";
 
-package collision;
-
 message Empty {}
 
-service CollisionTestService {
+service TestService {
     rpc Echo (TextMessage) returns (TextMessage) {}
     rpc Upper (TextMessage) returns (TextMessage) {}
     rpc NotImplemented (EmptyMessage) returns (EmptyMessage) {}
@@ -14,7 +12,6 @@ message EmptyMessage {}
 
 message TextMessage {
     required string text = 1;
-    optional string madeBy = 2;
 }
 
 message EventRequest {
@@ -22,3 +19,7 @@ message EventRequest {
     required uint32 delay = 2;
 }
 
+message FakeMessage {
+    enum Type { REQUEST = 1;}
+    required Type type = 1;
+}

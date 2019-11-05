@@ -21,7 +21,7 @@
     "url": "https://github.com/TechTeamer/wsrpc"
   },
   "scripts": {
-    "prepublishOnly": "make lint && make test && make docs && make lib",
+    "prepublishOnly": "make lint && make test && make lib",
     "test": "make ci-test"
   },
   "keywords": [

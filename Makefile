@@ -45,13 +45,7 @@ protocol/%.js: protocol/%.proto node_modules
 	pbjs -r $(basename $(notdir $<)) -t static-module -w commonjs -o $@ $<
 
 node_modules:
-	yarn
-
-.PHONY: docs
-docs: node_modules
-	typedoc --gitRevision master --target ES6 --mode file --out docs src
-	find docs -name "*.html" | xargs sed 's~$(shell pwd)~.~g' -i
-# 	echo "Served at <https://techteamer.github.io/wsrpc/>" > docs/README.md
+	npm install
 
 .PHONY: clean
 clean:

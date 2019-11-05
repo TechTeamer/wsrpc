@@ -1,11 +1,7 @@
 syntax = "proto2";
 
 message Message {
-    enum Type {
-        REQUEST = 1;
-        RESPONSE = 2;
-        EVENT = 3;
-    }
+    enum Type { REQUEST = 1; RESPONSE = 2; EVENT = 3; }
     required Type type = 1;
     optional Request request = 2;
     optional Response response = 3;
@@ -13,10 +9,9 @@ message Message {
 }
 
 message Request {
-    required string service = 1;
-    required string method = 2;
-    required uint32 seq = 3;
-    optional bytes payload = 4;
+    required string method = 1;
+    required uint32 seq = 2;
+    optional bytes payload = 3;
 }
 
 message Response {
